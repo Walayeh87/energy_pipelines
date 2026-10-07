@@ -23,8 +23,6 @@ class ColorFormatter(logging.Formatter):
 
 def setup_logging(level: int = logging.DEBUG) -> None:
     handler = logging.StreamHandler(sys.stdout)
-    handler.setFormatter(
-        ColorFormatter("%(levelname)s | %(filename)s | line: %(lineno)d | %(message)s")
-    )
+    handler.setFormatter(ColorFormatter("%(levelname)s | %(filename)s | line: %(lineno)d | %(message)s"))
 
     logging.basicConfig(level=level, handlers=[handler], force=True)

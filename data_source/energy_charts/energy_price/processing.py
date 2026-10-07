@@ -30,14 +30,10 @@ def process_fetched_energy_price_from_external_source(
         )
 
     timestamp = DataFrame(data_as_dict[PriceKeyInEnergyCharts.UNIX_SECONDS])
-    timestamp = timestamp.rename(
-        columns={timestamp.columns[0]: PriceDataColNameInDB.TIMESTAMP}
-    )
+    timestamp = timestamp.rename(columns={timestamp.columns[0]: PriceDataColNameInDB.TIMESTAMP})
 
     energy_price = DataFrame(data_as_dict[PriceKeyInEnergyCharts.PRICE])
-    energy_price = energy_price.rename(
-        columns={energy_price.columns[0]: PriceDataColNameInDB.ENERGY_PRICE}
-    )
+    energy_price = energy_price.rename(columns={energy_price.columns[0]: PriceDataColNameInDB.ENERGY_PRICE})
 
     data_as_df = pd.concat([timestamp, energy_price], axis="columns")
     data_as_df[PriceDataColNameInDB.PRICE_METADATA_ID] = price_metadata_id.value

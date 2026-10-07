@@ -11,9 +11,7 @@ from data_source.energy_charts.energy_price.price_col_name_in_db import (
 logger = logging.getLogger(__name__)
 
 
-def upsert_df_to_db(
-    df: DataFrame, db_connection: Connection, upsert_sql_query: LiteralString
-) -> None:
+def upsert_df_to_db(df: DataFrame, db_connection: Connection, upsert_sql_query: LiteralString) -> None:
     rows = [
         (
             row[PriceDataColNameInDB.TIMESTAMP],

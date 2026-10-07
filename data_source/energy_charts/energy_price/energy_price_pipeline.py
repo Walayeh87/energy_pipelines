@@ -14,8 +14,8 @@ from data_source.energy_charts.energy_price.url_creation import (
 )
 from data_source.utilities.db_connector import establish_db_connection
 from data_source.utilities.price_structure_in_db import PriceStructureInDB
-from utils.logging_config import setup_logging
 from utils.custom_objects import DbId
+from utils.logging_config import setup_logging
 
 setup_logging()
 logger = logging.getLogger(__name__)
@@ -52,9 +52,7 @@ def upload_daily_energy_price_to_db(
         do_update_col=do_update_col,
     )
 
-    upsert_df_to_db(
-        df=df, db_connection=db_connection, upsert_sql_query=upsert_sql_query
-    )
+    upsert_df_to_db(df=df, db_connection=db_connection, upsert_sql_query=upsert_sql_query)
 
 
 if __name__ == "__main__":

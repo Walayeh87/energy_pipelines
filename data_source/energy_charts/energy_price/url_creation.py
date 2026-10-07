@@ -1,9 +1,7 @@
 import logging
 from datetime import datetime, timedelta
 
-ENERGY_PRICE_URL = (
-    "https://api.energy-charts.info/price"  # TODO: it should be gotten from the DB
-)
+ENERGY_PRICE_URL = "https://api.energy-charts.info/price"  # TODO: it should be gotten from the DB
 
 logger = logging.getLogger(__name__)
 

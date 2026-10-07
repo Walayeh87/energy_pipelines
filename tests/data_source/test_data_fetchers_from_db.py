@@ -42,15 +42,9 @@ def test_fetch_energy_prices_success() -> None:
             "establish_db_connection",
             return_value=mock_connection,
         ),
-        patch.object(
-            data_source.data_fetchers_from_db, "create_energy_price_fetching_query"
-        ) as mock_price_query,
-        patch.object(
-            data_source.data_fetchers_from_db, "fetch_earliest_timestamp_in_table"
-        ) as earliest_timestamp,
-        patch.object(
-            data_source.data_fetchers_from_db, "get_current_date"
-        ) as mocked_current_date,
+        patch.object(data_source.data_fetchers_from_db, "create_energy_price_fetching_query") as mock_price_query,
+        patch.object(data_source.data_fetchers_from_db, "fetch_earliest_timestamp_in_table") as earliest_timestamp,
+        patch.object(data_source.data_fetchers_from_db, "get_current_date") as mocked_current_date,
     ):
         start_date = datetime(2026, 6, 1, tzinfo=pytz.UTC)
         end_date = datetime(2026, 6, 2, tzinfo=pytz.UTC)
@@ -104,15 +98,9 @@ def test_fetch_energy_prices_when_start_equals_end() -> None:
             "establish_db_connection",
             return_value=mock_connection,
         ),
-        patch.object(
-            data_source.data_fetchers_from_db, "create_energy_price_fetching_query"
-        ) as mock_price_query,
-        patch.object(
-            data_source.data_fetchers_from_db, "fetch_earliest_timestamp_in_table"
-        ) as earliest_timestamp,
-        patch.object(
-            data_source.data_fetchers_from_db, "get_current_date"
-        ) as mocked_current_date,
+        patch.object(data_source.data_fetchers_from_db, "create_energy_price_fetching_query") as mock_price_query,
+        patch.object(data_source.data_fetchers_from_db, "fetch_earliest_timestamp_in_table") as earliest_timestamp,
+        patch.object(data_source.data_fetchers_from_db, "get_current_date") as mocked_current_date,
     ):
         start_date = datetime(2026, 6, 1, tzinfo=pytz.UTC)
         end_date = datetime(2026, 6, 1, tzinfo=pytz.UTC)
@@ -161,15 +149,9 @@ def test_fetch_energy_prices_when_start_is_before_earliest_ts() -> None:
             "establish_db_connection",
             return_value=mock_connection,
         ),
-        patch.object(
-            data_source.data_fetchers_from_db, "create_energy_price_fetching_query"
-        ) as mock_price_query,
-        patch.object(
-            data_source.data_fetchers_from_db, "fetch_earliest_timestamp_in_table"
-        ) as earliest_timestamp,
-        patch.object(
-            data_source.data_fetchers_from_db, "get_current_date"
-        ) as mocked_current_date,
+        patch.object(data_source.data_fetchers_from_db, "create_energy_price_fetching_query") as mock_price_query,
+        patch.object(data_source.data_fetchers_from_db, "fetch_earliest_timestamp_in_table") as earliest_timestamp,
+        patch.object(data_source.data_fetchers_from_db, "get_current_date") as mocked_current_date,
     ):
         start_date = datetime(2026, 1, 1, tzinfo=pytz.UTC)
         end_date = datetime(2026, 6, 1, tzinfo=pytz.UTC)
@@ -218,15 +200,9 @@ def test_fetch_energy_prices_when_end_is_in_future() -> None:
             "establish_db_connection",
             return_value=mock_connection,
         ),
-        patch.object(
-            data_source.data_fetchers_from_db, "create_energy_price_fetching_query"
-        ) as mock_price_query,
-        patch.object(
-            data_source.data_fetchers_from_db, "fetch_earliest_timestamp_in_table"
-        ) as earliest_timestamp,
-        patch.object(
-            data_source.data_fetchers_from_db, "get_current_date"
-        ) as mocked_current_date,
+        patch.object(data_source.data_fetchers_from_db, "create_energy_price_fetching_query") as mock_price_query,
+        patch.object(data_source.data_fetchers_from_db, "fetch_earliest_timestamp_in_table") as earliest_timestamp,
+        patch.object(data_source.data_fetchers_from_db, "get_current_date") as mocked_current_date,
     ):
         start_date = datetime(2026, 1, 1, tzinfo=pytz.UTC)
         end_date = datetime(2026, 6, 2, tzinfo=pytz.UTC)
@@ -263,15 +239,9 @@ def test_fetch_energy_prices_db_error() -> None:
             "establish_db_connection",
             return_value=mock_connection,
         ),
-        patch.object(
-            data_source.data_fetchers_from_db, "create_energy_price_fetching_query"
-        ) as mock_price_query,
-        patch.object(
-            data_source.data_fetchers_from_db, "fetch_earliest_timestamp_in_table"
-        ) as earliest_timestamp,
-        patch.object(
-            data_source.data_fetchers_from_db, "get_current_date"
-        ) as mocked_current_date,
+        patch.object(data_source.data_fetchers_from_db, "create_energy_price_fetching_query") as mock_price_query,
+        patch.object(data_source.data_fetchers_from_db, "fetch_earliest_timestamp_in_table") as earliest_timestamp,
+        patch.object(data_source.data_fetchers_from_db, "get_current_date") as mocked_current_date,
     ):
         start_date = datetime(2026, 6, 1, tzinfo=pytz.UTC)
         end_date = datetime(2026, 6, 2, tzinfo=pytz.UTC)

@@ -39,14 +39,9 @@ def test_create_url_for_range_of_energy_prices_when_date_end_is_not_none() -> No
     date_start = datetime(2025, 1, 1)
     date_end = datetime(2025, 1, 2)
 
-    url = create_url_for_range_of_energy_prices(
-        bidding_zone=bidding_zone, date_start=date_start, date_end=date_end
-    )
+    url = create_url_for_range_of_energy_prices(bidding_zone=bidding_zone, date_start=date_start, date_end=date_end)
 
-    assert (
-        url
-        == f"{ENERGY_PRICE_URL}?bzn={bidding_zone}&start={date_start}&end={date_end}"
-    )
+    assert url == f"{ENERGY_PRICE_URL}?bzn={bidding_zone}&start={date_start}&end={date_end}"
 
 
 @patch(f"{url_creation_path}.get_tomorrows_date")
@@ -58,11 +53,6 @@ def test_create_url_for_range_of_energy_prices_when_date_end_is_none(
     bidding_zone = "DE-LU"
     date_start = datetime(2025, 1, 1)
 
-    url = create_url_for_range_of_energy_prices(
-        bidding_zone=bidding_zone, date_start=date_start, date_end=None
-    )
+    url = create_url_for_range_of_energy_prices(bidding_zone=bidding_zone, date_start=date_start, date_end=None)
 
-    assert (
-        url
-        == f"{ENERGY_PRICE_URL}?bzn={bidding_zone}&start={date_start}&end={mocked_tomorrows_date}"
-    )
+    assert url == f"{ENERGY_PRICE_URL}?bzn={bidding_zone}&start={date_start}&end={mocked_tomorrows_date}"

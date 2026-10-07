@@ -72,9 +72,7 @@ def fetch_energy_prices(
 
 
 @app.get("/energy_prices")
-def fetch_earliest_timestamp_in_table(
-    price_metadata_id: int, shema_name: str, table_name: str
-) -> datetime:
+def fetch_earliest_timestamp_in_table(price_metadata_id: int, shema_name: str, table_name: str) -> datetime:
     db_start_date = "db_start_date"  # custom name
 
     query, params = create_query_for_earliest_timestamp(

@@ -1,0 +1,14 @@
+# Exclude .ipynb from the formatting
+extend-exclude = ["*.ipynb"]
+
+# Formatting specifications
+line-length = 120
+indent-width = 4
+
+[lint.pydocstyle]
+convention = "google"
+
+[lint]
+# "I" activates isort rules, see: https://docs.astral.sh/ruff/rules/#isort-i
+# "N" checks naming conventions.
+extend-select = ["I", "N", "E", "F", "UP", "B", "ANN"]

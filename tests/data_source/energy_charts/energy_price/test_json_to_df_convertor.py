@@ -16,9 +16,7 @@ from utils.custom_objects import DbId
 
 def test_convert_energy_price_from_dict_to_df_with_empty_dict() -> None:
     with pytest.raises(ValueError):
-        process_fetched_energy_price_from_external_source(
-            data_as_dict={}, price_metadata_id=DbId(value=1)
-        )
+        process_fetched_energy_price_from_external_source(data_as_dict={}, price_metadata_id=DbId(value=1))
 
 
 def test_convert_energy_price_from_dict_to_df_with_empty_keys() -> None:
@@ -27,9 +25,7 @@ def test_convert_energy_price_from_dict_to_df_with_empty_keys() -> None:
             PriceKeyInEnergyCharts.UNIX_SECONDS: [],
             PriceKeyInEnergyCharts.PRICE: [],
         }
-        process_fetched_energy_price_from_external_source(
-            data_as_dict=data_as_dict, price_metadata_id=DbId(value=1)
-        )
+        process_fetched_energy_price_from_external_source(data_as_dict=data_as_dict, price_metadata_id=DbId(value=1))
 
 
 def test_convert_energy_price_from_dict_to_df() -> None:

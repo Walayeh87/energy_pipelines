@@ -34,14 +34,10 @@ def fetch_data(
         raise ValueError(f"max_attempts must be at least 1. Got {max_attempts}")
 
     if retry_delay_in_s < 1:
-        raise ValueError(
-            f"retry_delay_in_s must be at least 1 second. Got {retry_delay_in_s}"
-        )
+        raise ValueError(f"retry_delay_in_s must be at least 1 second. Got {retry_delay_in_s}")
 
     if request_timeout_in_s < 1:
-        raise ValueError(
-            f"request_timeout_in_s must be at least 1 second. Got {request_timeout_in_s}"
-        )
+        raise ValueError(f"request_timeout_in_s must be at least 1 second. Got {request_timeout_in_s}")
 
     if retry_delay_in_s * max_attempts > 2 * TimeConstant.SEC_IN_H:
         raise ValueError("Total retry time exceeds 2 hours. Adjust retry parameters.")
@@ -61,18 +57,12 @@ def fetch_data(
 
         except RequestException as e:
             if attempt == max_attempts:
-                raise RuntimeError(
-                    f"Failed to fetch data after {max_attempts} attempts."
-                ) from e
+                raise RuntimeError(f"Failed to fetch data after {max_attempts} attempts.") from e
 
-            logger.warning(
-                f"Attempt {attempt} failed: {e}. Retrying in {retry_delay_in_s} seconds..."
-            )
+            logger.warning(f"Attempt {attempt} failed: {e}. Retrying in {retry_delay_in_s} seconds...")
             time.sleep(retry_delay_in_s)
 
         except ValueError as e:
             raise ValueError("Invalid json.") from e
 
-    raise Exception(
-        f"Unexpected error in {fetch_data.__name__}, most likely due to network issues."
-    )
+    raise Exception(f"Unexpected error in {fetch_data.__name__}, most likely due to network issues.")

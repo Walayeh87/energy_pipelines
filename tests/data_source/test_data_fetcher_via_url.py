@@ -67,9 +67,7 @@ def test_all_attempts_fail(mock_sleep, mock_get, mock_failing_response) -> None:
     url = "https://api.example.com"
     max_attempts = 3
 
-    with pytest.raises(
-        RuntimeError, match=f"Failed to fetch data after {max_attempts} attempts"
-    ):
+    with pytest.raises(RuntimeError, match=f"Failed to fetch data after {max_attempts} attempts"):
         fetch_data(url, max_attempts=max_attempts, retry_delay_in_s=1)
 
     assert mock_get.call_count == max_attempts
@@ -84,9 +82,7 @@ def test_connection_error_retries(mock_get) -> None:
     url = "https://api.example.com"
     max_attempts = 2
 
-    with pytest.raises(
-        RuntimeError, match=f"Failed to fetch data after {max_attempts} attempts"
-    ):
+    with pytest.raises(RuntimeError, match=f"Failed to fetch data after {max_attempts} attempts"):
         fetch_data(url, max_attempts=max_attempts, retry_delay_in_s=1)
 
     assert mock_get.call_count == max_attempts
@@ -100,9 +96,7 @@ def test_timeout_error_retries(mock_get) -> None:
     url = "https://api.example.com"
     max_attempts = 2
 
-    with pytest.raises(
-        RuntimeError, match=f"Failed to fetch data after {max_attempts} attempts"
-    ):
+    with pytest.raises(RuntimeError, match=f"Failed to fetch data after {max_attempts} attempts"):
         fetch_data(url, max_attempts=max_attempts, retry_delay_in_s=1)
 
     assert mock_get.call_count == max_attempts
@@ -119,9 +113,7 @@ def test_http_404_error(mock_get) -> None:
     url = "https://api.example.com/invalid"
     max_attempts = 2
 
-    with pytest.raises(
-        RuntimeError, match=f"Failed to fetch data after {max_attempts} attempts"
-    ):
+    with pytest.raises(RuntimeError, match=f"Failed to fetch data after {max_attempts} attempts"):
         fetch_data(url, max_attempts=max_attempts, retry_delay_in_s=1)
 
     assert mock_get.call_count == max_attempts
