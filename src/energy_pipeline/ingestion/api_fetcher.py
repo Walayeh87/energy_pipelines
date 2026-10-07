@@ -10,7 +10,7 @@ from constants.time_constant import TimeConstant
 logger = logging.getLogger(__name__)
 
 
-def fetch_data(
+def fetch_data_from_api(
     url: str,
     max_attempts: int = 200,
     retry_delay_in_s: int = 30,
@@ -65,4 +65,4 @@ def fetch_data(
         except ValueError as e:
             raise ValueError("Invalid json.") from e
 
-    raise Exception(f"Unexpected error in {fetch_data.__name__}, most likely due to network issues.")
+    raise Exception(f"Unexpected error in {fetch_data_from_api.__name__}, most likely due to network issues.")

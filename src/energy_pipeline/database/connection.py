@@ -1,21 +1,24 @@
 import logging
 
-import psycopg
-from psycopg import Connection
-from psycopg.rows import dict_row
+from sqlalchemy import Engine, create_engine
+from sqlalchemy.orm import Session, sessionmaker
 
 from src.energy_pipeline.config.settings import DB_URL
 
 logger = logging.getLogger(__name__)
 
 
-def establish_db_connection() -> Connection:
+def create_db_engine() -> Engine:
     if DB_URL is None:
         logger.error("Database URL is not set. Please check your environment variables.")
         raise ValueError("Database URL is not set.")
 
-    connection = psycopg.connect(DB_URL, row_factory=dict_row)
+    db_engine = create_engine(DB_URL)
+    logger.info("Database engine has been created successfully.")
 
-    logger.info("Connection to the database has been established successfully.")
+    return db_engine
 
-    return connection
+
+def create_session(db_engine: Engine) -> Session:
+    Session = sessionmaker(bind=db_engine)
+    return Session()

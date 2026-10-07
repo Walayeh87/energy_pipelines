@@ -4,58 +4,56 @@ from typing import Any
 import pandas as pd
 from pandas import DataFrame
 
-from src.energy_pipeline.database.price_col_name_in_db import PriceDataColNameInDB
-from src.energy_pipeline.database.price_key_in_energy_charts import PriceKeyInEnergyCharts
+from src.energy_pipeline.config.energy_price_keys_in_api import PriceKeysInEnergyCharts
+from src.energy_pipeline.database.models import PriceData
 from utils.custom_objects import DbId
 
 logger = logging.getLogger(__name__)
 
 
-def process_energy_price(
-    data_as_dict: dict[str, Any],
+def preprocess_energy_price(
+    prices_as_dict: dict[str, Any],
     price_metadata_id: DbId,
 ) -> DataFrame:
-    df = _normalize_energy_price(data_as_dict=data_as_dict, price_metadata_id=price_metadata_id)
-    df = df.drop_duplicates(PriceDataColNameInDB.TIMESTAMP)
-    df = df.sort_values(PriceDataColNameInDB.TIMESTAMP)
+    timestamp_key = PriceData.timestamp.key
+
+    df = _convert_energy_price_to_df(data_as_dict=prices_as_dict, price_metadata_id=price_metadata_id)
+    df = df.drop_duplicates(timestamp_key)
+    df = df.sort_values(timestamp_key)
 
     logger.info("Energy prices have been processed successfully.")
 
     return df
 
 
-def _normalize_energy_price(
+def _convert_energy_price_to_df(
     data_as_dict: dict[str, Any],
     price_metadata_id: DbId,
 ) -> DataFrame:
     if len(data_as_dict) == 0:
         raise ValueError("data_as_dict must not be empty.")
 
-    if (len(data_as_dict[PriceKeyInEnergyCharts.UNIX_SECONDS]) == 0) or (
-        len(data_as_dict[PriceKeyInEnergyCharts.PRICE]) == 0
+    if (len(data_as_dict[PriceKeysInEnergyCharts.UNIX_SECONDS]) == 0) or (
+        len(data_as_dict[PriceKeysInEnergyCharts.PRICE]) == 0
     ):
         raise ValueError(
-            f"{PriceKeyInEnergyCharts.UNIX_SECONDS} and/or {PriceKeyInEnergyCharts.PRICE} contain(s) no data."
+            f"{PriceKeysInEnergyCharts.UNIX_SECONDS} and/or {PriceKeysInEnergyCharts.PRICE} contain(s) no data."
         )
 
-    timestamp = DataFrame(data_as_dict[PriceKeyInEnergyCharts.UNIX_SECONDS])
-    timestamp = timestamp.rename(columns={timestamp.columns[0]: PriceDataColNameInDB.TIMESTAMP})
+    timestamp_key = PriceData.timestamp.key
+    metadata_id_key = PriceData.price_metadata_id.key
+    energy_price_key = PriceData.energy_price.key
 
-    energy_price = DataFrame(data_as_dict[PriceKeyInEnergyCharts.PRICE])
-    energy_price = energy_price.rename(columns={energy_price.columns[0]: PriceDataColNameInDB.ENERGY_PRICE})
+    timestamp = DataFrame(data_as_dict[PriceKeysInEnergyCharts.UNIX_SECONDS])
+    timestamp = timestamp.rename(columns={timestamp.columns[0]: timestamp_key})
+
+    energy_price = DataFrame(data_as_dict[PriceKeysInEnergyCharts.PRICE])
+    energy_price = energy_price.rename(columns={energy_price.columns[0]: energy_price_key})
 
     data_as_df = pd.concat([timestamp, energy_price], axis="columns")
-    data_as_df[PriceDataColNameInDB.PRICE_METADATA_ID] = price_metadata_id.value
-    data_as_df[PriceDataColNameInDB.TIMESTAMP] = pd.to_datetime(
-        data_as_df[PriceDataColNameInDB.TIMESTAMP], unit="s", utc=True
-    )
-    data_as_df = data_as_df[
-        [
-            PriceDataColNameInDB.TIMESTAMP,
-            PriceDataColNameInDB.PRICE_METADATA_ID,
-            PriceDataColNameInDB.ENERGY_PRICE,
-        ]
-    ]
+    data_as_df[metadata_id_key] = price_metadata_id.value
+    data_as_df[timestamp_key] = pd.to_datetime(data_as_df[timestamp_key], unit="s", utc=True)
+    data_as_df = data_as_df[[timestamp_key, metadata_id_key, energy_price_key]]
 
     return data_as_df
 
@@ -66,5 +64,5 @@ if __name__ == "__main__":
         "price": [50.0, 51.0],
         "unit": "EUR/MWh",
     }
-    price_as_df = _normalize_energy_price(data_as_dict=data_as_dict, price_metadata_id=DbId(value=1))
+    price_as_df = _convert_energy_price_to_df(data_as_dict=data_as_dict, price_metadata_id=DbId(value=1))
     print(price_as_df)

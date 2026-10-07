@@ -1,28 +1,19 @@
 import logging
-from typing import LiteralString
 
 from pandas import DataFrame
-from psycopg import Connection
+from sqlalchemy.dialects.postgresql import insert
+from sqlalchemy.orm import Session
 
-from src.energy_pipeline.database.price_col_name_in_db import PriceDataColNameInDB
+from src.energy_pipeline.database.models import PriceData
 
 logger = logging.getLogger(__name__)
 
 
-def upsert_df_to_db(df: DataFrame, db_connection: Connection, upsert_sql_query: LiteralString) -> None:
-    rows = [
-        (
-            row[PriceDataColNameInDB.TIMESTAMP],
-            row[PriceDataColNameInDB.PRICE_METADATA_ID],
-            row[PriceDataColNameInDB.ENERGY_PRICE],
-        )
-        for _, row in df.iterrows()
-    ]
+def upsert_energy_prices_to_db(session: Session, prices: DataFrame) -> None:
+    stmt = insert(PriceData).values(prices.to_dict(orient="records"))
+    stmt = stmt.on_conflict_do_nothing(index_elements=[PriceData.timestamp])
 
-    with db_connection.cursor() as cursor:
-        cursor.executemany(upsert_sql_query, rows)
+    session.execute(stmt)
+    session.commit()
 
-    logger.info(f"{len(rows)} energy prices have been loaded to the database.")
-
-    db_connection.commit()
-    db_connection.close()
+    logger.info(f"{len(prices)} energy prices have been loaded to the database successfully.")
