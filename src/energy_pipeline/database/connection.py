@@ -16,8 +16,8 @@ def create_db_engine() -> Engine:
 
     try:
         db_engine = create_engine(DB_URL)
-    except NoSuchModuleError:
-        logger.error("DB_URL is incorrect. Please check your environment variables.")
+    except NoSuchModuleError as e:
+        logger.error(f"DB_URL is incorrect. Please check your environment variables. Details: {e}")
         raise
 
     logger.info("Database engine has been created successfully.")
@@ -26,5 +26,11 @@ def create_db_engine() -> Engine:
 
 
 def create_session(db_engine: Engine) -> Session:
-    Session = sessionmaker(bind=db_engine)
-    return Session()
+    try:
+        session = sessionmaker(bind=db_engine)
+    except Exception as e:
+        logger.error(f"Failed to create database session: {e}")
+        raise
+
+    logger.info("Database session has been created successfully.")
+    return session()

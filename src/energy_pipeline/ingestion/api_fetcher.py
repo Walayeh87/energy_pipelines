@@ -51,13 +51,13 @@ def fetch_data_from_api(
             if len(data_as_dict) == 0:
                 logger.warning("Fetched data is empty!")
             else:
-                logger.info("Items have been fetched successfully from the source.")
+                logger.info("Data have been fetched successfully from the source.")
 
             return data_as_dict
 
         except RequestException as e:
             if attempt == max_attempts:
-                raise RuntimeError(f"Failed to fetch data after {max_attempts} attempts.") from e
+                raise RuntimeError(f"Failed to fetch data from the source after {max_attempts} attempts.") from e
 
             logger.warning(f"Attempt {attempt} failed: {e}. Retrying in {retry_delay_in_s} seconds...")
             time.sleep(retry_delay_in_s)

@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 def upsert_energy_prices_to_db(session: Session, prices: DataFrame) -> None:
     stmt = insert(PriceData).values(prices.to_dict(orient="records"))
-    stmt = stmt.on_conflict_do_nothing(index_elements=[PriceData.timestamp])
+    stmt = stmt.on_conflict_do_nothing(index_elements=[PriceData.timestamp, PriceData.price_metadata_id])
 
     session.execute(stmt)
     session.commit()
