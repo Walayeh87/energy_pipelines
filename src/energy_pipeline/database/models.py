@@ -18,8 +18,9 @@ class PriceData(Base):
     energy_price: Mapped[float] = mapped_column(Numeric)
 
     def __repr__(self) -> str:
+        schema_name = self.__table_args__[0].get("schema")
         return (
-            f"{self.__class__.__name__}("
+            f"{schema_name}.{self.__tablename__}("
             f"timestamp={self.timestamp}, "
             f"price_metadata_id={self.price_metadata_id}, "
             f"energy_price={self.energy_price})"
