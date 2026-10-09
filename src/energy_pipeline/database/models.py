@@ -34,16 +34,12 @@ class Regions(Base):
     __tablename__ = "regions"
     __table_args__ = {"schema": SchemaNames.ENERGY_PRICES}
 
-    code: Mapped[str] = mapped_column(String(10), primary_key=True, unique=True)
+    bidding_zone: Mapped[str] = mapped_column(String(10), primary_key=True, unique=True)
     name: Mapped[str] = mapped_column(String(50), nullable=False)
-    bidding_zone: Mapped[str] = mapped_column(String(20), nullable=False)
 
     def __repr__(self) -> str:
         return (
-            f"{SchemaNames.ENERGY_PRICES}.{self.__tablename__}("
-            f"code={self.code!r}, "
-            f"name={self.name!r}, "
-            f"bidding_zone={self.bidding_zone!r})"
+            f"{SchemaNames.ENERGY_PRICES}.{self.__tablename__}(bidding_zone={self.bidding_zone!r}, name={self.name!r}, "
         )
 
 
@@ -56,9 +52,9 @@ class PriceMetadata(Base):
         primary_key=True,
         autoincrement=True,
     )
-    region_code: Mapped[str | None] = mapped_column(
+    bidding_zone: Mapped[str | None] = mapped_column(
         String(10),
-        ForeignKey(Regions.code),
+        ForeignKey(Regions.bidding_zone),
         nullable=True,
     )
     market_type: Mapped[str | None] = mapped_column(
@@ -76,7 +72,7 @@ class PriceMetadata(Base):
         return (
             f"{SchemaNames.ENERGY_PRICES}.{self.__tablename__}("
             f"price_metadata_id={self.price_metadata_id!r}, "
-            f"region_code={self.region_code!r}, "
+            f"bidding_zone={self.bidding_zone!r}, "
             f"market_type={self.market_type!r}, "
             f"freq={self.freq!r}, "
             f"source={self.source!r}, "
