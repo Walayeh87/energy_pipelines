@@ -5,7 +5,7 @@ from typing import Any
 import requests
 from requests import RequestException
 
-from constants.time_constant import TimeConstant
+from utils.time_constant import TimeConstant
 
 logger = logging.getLogger(__name__)
 
