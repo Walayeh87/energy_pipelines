@@ -15,6 +15,7 @@ logger = logging.getLogger(__name__)
 def upload_daily_energy_price_to_db(
     bidding_zone: str,
     price_metadata_id: DbId,
+    update_on_conflict: bool = False,
 ) -> None:
     prices_url = create_url_for_tomorrows_energy_prices(bidding_zone=bidding_zone)
     prices_as_dict = fetch_data_from_api(url=prices_url)
@@ -23,11 +24,12 @@ def upload_daily_energy_price_to_db(
     db_engine = create_db_engine()
     session = create_session(db_engine=db_engine)
 
-    upsert_energy_prices_to_db(session=session, prices=prices_as_df)
+    upsert_energy_prices_to_db(session=session, prices=prices_as_df, update_on_conflict=update_on_conflict)
 
 
 if __name__ == "__main__":
     upload_daily_energy_price_to_db(
         bidding_zone="DE-LU",
         price_metadata_id=DbId(value=1),
+        update_on_conflict=False,
     )
