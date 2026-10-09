@@ -6,14 +6,13 @@ from pandas import DataFrame
 
 from src.energy_pipeline.config.energy_price_keys_in_api import PriceKeysInEnergyCharts
 from src.energy_pipeline.database.models import PriceData
-from utils.custom_objects import DbId
 
 logger = logging.getLogger(__name__)
 
 
 def preprocess_energy_price(
     prices_as_dict: dict[str, Any],
-    price_metadata_id: DbId,
+    price_metadata_id: int,
 ) -> DataFrame:
     timestamp_key = PriceData.timestamp.key
 
@@ -28,7 +27,7 @@ def preprocess_energy_price(
 
 def _convert_energy_price_to_df(
     data_as_dict: dict[str, Any],
-    price_metadata_id: DbId,
+    price_metadata_id: int,
 ) -> DataFrame:
     if len(data_as_dict) == 0:
         raise ValueError("data_as_dict must not be empty.")
@@ -51,7 +50,7 @@ def _convert_energy_price_to_df(
     energy_price = energy_price.rename(columns={energy_price.columns[0]: energy_price_key})
 
     data_as_df = pd.concat([timestamp, energy_price], axis="columns")
-    data_as_df[metadata_id_key] = price_metadata_id.value
+    data_as_df[metadata_id_key] = price_metadata_id
     data_as_df[timestamp_key] = pd.to_datetime(data_as_df[timestamp_key], unit="s", utc=True)
     data_as_df = data_as_df[[timestamp_key, metadata_id_key, energy_price_key]]
 
@@ -64,5 +63,5 @@ if __name__ == "__main__":
         "price": [50.0, 51.0],
         "unit": "EUR/MWh",
     }
-    price_as_df = _convert_energy_price_to_df(data_as_dict=data_as_dict, price_metadata_id=DbId(value=1))
+    price_as_df = _convert_energy_price_to_df(data_as_dict=data_as_dict, price_metadata_id=1)
     print(price_as_df)

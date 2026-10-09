@@ -6,7 +6,6 @@ from sqlalchemy import DateTime, ForeignKey, Integer, Numeric, String, Text
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 from src.energy_pipeline.database.connection import create_db_engine, create_session
-from utils.custom_objects import DbId
 from utils.logging_config import setup_logging
 
 setup_logging()
@@ -47,7 +46,7 @@ class PriceMetadata(Base):
     __tablename__ = "price_metadata"
     __table_args__ = {"schema": SchemaNames.ENERGY_PRICES}
 
-    price_metadata_id: Mapped[DbId] = mapped_column(
+    price_metadata_id: Mapped[int] = mapped_column(
         Integer,
         primary_key=True,
         autoincrement=True,
@@ -86,7 +85,7 @@ class PriceData(Base):
     __table_args__ = {"schema": SchemaNames.ENERGY_PRICES}
 
     timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), primary_key=True)
-    price_metadata_id: Mapped[DbId] = mapped_column(
+    price_metadata_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey(PriceMetadata.price_metadata_id),
         nullable=False,

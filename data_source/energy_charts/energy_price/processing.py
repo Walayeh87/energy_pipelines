@@ -10,14 +10,13 @@ from data_source.energy_charts.energy_price.price_col_name_in_db import (
 from data_source.energy_charts.energy_price.price_key_in_energy_charts import (
     PriceKeyInEnergyCharts,
 )
-from utils.custom_objects import DbId
 
 logger = logging.getLogger(__name__)
 
 
 def process_fetched_energy_price_from_external_source(
     data_as_dict: dict[str, Any],
-    price_metadata_id: DbId,
+    price_metadata_id: int,
 ) -> DataFrame:
     if len(data_as_dict) == 0:
         raise ValueError("data_as_dict must not be empty.")
@@ -60,6 +59,6 @@ if __name__ == "__main__":
         "unit": "EUR/MWh",
     }
     price_as_df = process_fetched_energy_price_from_external_source(
-        data_as_dict=data_as_dict, price_metadata_id=DbId(value=1)
+        data_as_dict=data_as_dict, price_metadata_id=int(value=1)
     )
     print(price_as_df)

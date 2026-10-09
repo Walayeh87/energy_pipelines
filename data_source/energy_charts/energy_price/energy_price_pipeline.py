@@ -14,7 +14,6 @@ from data_source.energy_charts.energy_price.url_creation import (
 )
 from data_source.utilities.db_connector import establish_db_connection
 from data_source.utilities.price_structure_in_db import PriceStructureInDB
-from utils.custom_objects import DbId
 from utils.logging_config import setup_logging
 
 setup_logging()
@@ -23,7 +22,7 @@ logger = logging.getLogger(__name__)
 
 def upload_daily_energy_price_to_db(
     bidding_zone: str,
-    price_metadata_id: DbId,
+    price_metadata_id: int,
     do_update_col: str = "energy_price",
 ) -> None:
     url = create_url_for_tomorrows_energy_prices(bidding_zone=bidding_zone)
@@ -58,5 +57,5 @@ def upload_daily_energy_price_to_db(
 if __name__ == "__main__":
     upload_daily_energy_price_to_db(
         bidding_zone="DE-LU",
-        price_metadata_id=DbId(value=1),
+        price_metadata_id=int(value=1),
     )

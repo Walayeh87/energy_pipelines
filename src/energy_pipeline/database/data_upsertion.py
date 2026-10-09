@@ -7,7 +7,6 @@ from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session
 
 from src.energy_pipeline.database.models import PriceData
-from utils.custom_objects import DbId
 
 logger = logging.getLogger(__name__)
 
@@ -49,7 +48,7 @@ def upsert_energy_prices_to_db(session: Session, prices: DataFrame, update_on_co
     session.commit()
 
 
-def _check_price_existence(session: Session, timestamps: Series[datetime], price_metadata_ids: Series[DbId]) -> bool:
+def _check_price_existence(session: Session, timestamps: Series[datetime], price_metadata_ids: Series[int]) -> bool:
     keys = list(zip(timestamps.tolist(), price_metadata_ids.tolist(), strict=True))
 
     if not keys:
