@@ -4,7 +4,7 @@ from typing import Any
 import pandas as pd
 from pandas import DataFrame
 
-from src.energy_pipeline.config.energy_price_keys_in_api import PriceKeysInEnergyCharts
+from src.energy_pipeline.config.energy_price_keys_in_api import EnergyChartsKeys
 from src.energy_pipeline.database.models import PriceData
 
 logger = logging.getLogger(__name__)
@@ -32,21 +32,17 @@ def _convert_energy_price_to_df(
     if len(data_as_dict) == 0:
         raise ValueError("data_as_dict must not be empty.")
 
-    if (len(data_as_dict[PriceKeysInEnergyCharts.UNIX_SECONDS]) == 0) or (
-        len(data_as_dict[PriceKeysInEnergyCharts.PRICE]) == 0
-    ):
-        raise ValueError(
-            f"{PriceKeysInEnergyCharts.UNIX_SECONDS} and/or {PriceKeysInEnergyCharts.PRICE} contain(s) no data."
-        )
+    if (len(data_as_dict[EnergyChartsKeys.UNIX_SECONDS]) == 0) or (len(data_as_dict[EnergyChartsKeys.PRICE]) == 0):
+        raise ValueError(f"{EnergyChartsKeys.UNIX_SECONDS} and/or {EnergyChartsKeys.PRICE} contain(s) no data.")
 
     timestamp_key = PriceData.timestamp.key
     metadata_id_key = PriceData.price_metadata_id.key
     energy_price_key = PriceData.energy_price.key
 
-    timestamp = DataFrame(data_as_dict[PriceKeysInEnergyCharts.UNIX_SECONDS])
+    timestamp = DataFrame(data_as_dict[EnergyChartsKeys.UNIX_SECONDS])
     timestamp = timestamp.rename(columns={timestamp.columns[0]: timestamp_key})
 
-    energy_price = DataFrame(data_as_dict[PriceKeysInEnergyCharts.PRICE])
+    energy_price = DataFrame(data_as_dict[EnergyChartsKeys.PRICE])
     energy_price = energy_price.rename(columns={energy_price.columns[0]: energy_price_key})
 
     data_as_df = pd.concat([timestamp, energy_price], axis="columns")

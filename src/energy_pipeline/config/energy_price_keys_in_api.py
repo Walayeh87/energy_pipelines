@@ -1,6 +1,6 @@
 from enum import StrEnum
 
 
-class PriceKeysInEnergyCharts(StrEnum):
+class EnergyChartsKeys(StrEnum):
     UNIX_SECONDS = "unix_seconds"
     PRICE = "price"
