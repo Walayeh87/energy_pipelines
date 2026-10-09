@@ -14,5 +14,5 @@ class TimeConstant(int, Enum):
 
     DAY_IN_WEEK = 7
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return repr(self.value)

@@ -49,7 +49,8 @@ def fetch_energy_prices(
 
     if start_date < earliest_timestamp_in_db:
         logger.error(
-            f"The historical data provided starts before the earliest timestamp in energy prices for price_metadata_id {price_metadata_id}."
+            f"The historical data provided starts before the earliest timestamp in energy prices for price_metadata_id"
+            f" {price_metadata_id}."
         )
         raise ValueError
 
