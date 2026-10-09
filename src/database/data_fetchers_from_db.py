@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from src.database.models import PriceMetadata, Regions
 
 
-def get_bidding_zone_and_price_metadata_ids_mapper(session: Session, bidding_zones: list[str]) -> dict[str, int]:
+def fetch_bidding_zone_and_price_metadata_ids_mapper(session: Session, bidding_zones: list[str]) -> dict[str, int]:
     mapper = {}
     for bidding_zone in bidding_zones:
         result = (
@@ -19,7 +19,7 @@ def get_bidding_zone_and_price_metadata_ids_mapper(session: Session, bidding_zon
     return mapper
 
 
-def get_bidding_zones(session: Session) -> list[str]:
+def fetch_bidding_zones(session: Session) -> list[str]:
     result = session.query(Regions.bidding_zone).all()
 
     return [bidding_zone for (bidding_zone,) in result]

@@ -2,8 +2,8 @@ import logging
 
 from src.database.connection import create_db_engine, create_session
 from src.database.data_fetchers_from_db import (
-    get_bidding_zone_and_price_metadata_ids_mapper,
-    get_bidding_zones,
+    fetch_bidding_zone_and_price_metadata_ids_mapper,
+    fetch_bidding_zones,
 )
 from src.database.data_upsertion import upsert_energy_prices_to_db
 from src.ingestion.api_fetcher import fetch_data_from_api
@@ -19,8 +19,8 @@ def upsert_daily_energy_price_to_db(update_on_conflict: bool = False) -> None:
     db_engine = create_db_engine()
     session = create_session(db_engine=db_engine)
 
-    bidding_zones = get_bidding_zones(session=session)
-    mapper = get_bidding_zone_and_price_metadata_ids_mapper(session=session, bidding_zones=bidding_zones)
+    bidding_zones = fetch_bidding_zones(session=session)
+    mapper = fetch_bidding_zone_and_price_metadata_ids_mapper(session=session, bidding_zones=bidding_zones)
 
     for bidding_zone, price_metadata_id in mapper.items():
         if price_metadata_id <= 0:
