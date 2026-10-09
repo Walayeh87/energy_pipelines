@@ -1,113 +1,25 @@
-import logging
-from datetime import datetime
+from sqlalchemy.orm import Session
 
-import pytz
-from fastapi import FastAPI
-from sqlalchemy.orm import declarative_base
-
-from src.energy_pipeline.database.connection import create_db_engine, create_session
-from src.energy_pipeline.database.models import PriceData
-
-logger = logging.getLogger(__name__)
-
-app = FastAPI()
-DB_ENGINE = create_db_engine()
-SESSION = create_session(db_engine=DB_ENGINE)
-Base = declarative_base()
+from src.energy_pipeline.database.models import PriceMetadata, Regions
 
 
-@app.get("/")
-def root() -> dict:
-    return {"message": "DB API is running"}
+def get_bidding_zone_and_price_metadata_ids_mapper(session: Session, bidding_zones: list[str]) -> dict[str, int]:
+    mapper = {}
+    for bidding_zone in bidding_zones:
+        result = (
+            session.query(PriceMetadata.price_metadata_id)
+            .filter(PriceMetadata.bidding_zone == bidding_zone)
+            .filter(PriceMetadata.market_type == "DAY_AHEAD")
+            .all()
+        )
+        invalid_id_value = 0
+        price_metadata_id = [price_metadata_id for (price_metadata_id,) in result][0] if result else invalid_id_value
+        mapper[bidding_zone] = price_metadata_id
+
+    return mapper
 
 
-@app.get("/price_data")
-def get_price_data(
-    price_metadata_id: int,
-    start_date: datetime,
-    end_date: datetime,
-) -> list[dict]:
-    Base.metadata.create_all(DB_ENGINE)
-    rows = SESSION.query(PriceData).limit(50).all()
+def get_bidding_zones(session: Session) -> list[str]:
+    result = session.query(Regions.bidding_zone).all()
 
-    for row in rows:
-        print(row)
-
-
-# @app.get("/price_data")
-# def get_price_data2(
-#     price_metadata_id: int,
-#     start_date: datetime,
-#     end_date: datetime,
-# ) -> list[dict]:
-#     if price_metadata_id <= 0:
-#         logger.error("price_metadata_id must be greater than 0")
-#         raise ValueError
-#
-#     if start_date >= end_date:
-#         logger.error("start_date must not be after end_date")
-#         raise ValueError
-#
-#     if end_date > get_current_date():
-#         logger.error("index must not contain future dates")
-#         raise ValueError
-#
-#     earliest_timestamp_in_db = fetch_earliest_timestamp_in_table(
-#         price_metadata_id=price_metadata_id,
-#         shema_name=PriceStructureInDB.SCHEMA_NAME,
-#         table_name=PriceStructureInDB.TABLE_NAME,
-#     )
-#
-#     if start_date < earliest_timestamp_in_db:
-#         logger.error(
-#             f"The historical data provided starts before the earliest timestamp in energy prices for price_metadata_id {price_metadata_id}."
-#         )
-#         raise ValueError
-#
-#     query, params = create_energy_price_fetching_query(
-#         price_metadata_id=price_metadata_id,
-#         start_date=start_date,
-#         end_date=end_date,
-#     )
-#
-#     try:
-#         with establish_db_connection() as connection:
-#             with connection.cursor() as cursor:
-#                 cursor.execute(query, params)
-#                 result = cursor.fetchall()
-#
-#         return result
-#
-#     except psycopg.Error as e:
-#         raise HTTPException(status_code=500, detail="Database error") from e
-#
-#
-# @app.get("/energy_prices")
-# def fetch_earliest_timestamp_in_table(price_metadata_id: int, shema_name: str, table_name: str) -> datetime:
-#     db_start_date = "db_start_date"  # custom name
-#
-#     query, params = create_query_for_earliest_timestamp(
-#         db_start_date=db_start_date,
-#         shema_name=shema_name,
-#         table_name=table_name,
-#         price_metadata_id=price_metadata_id,
-#     )
-#
-#     try:
-#         with establish_db_connection() as connection:
-#             with connection.cursor() as cursor:
-#                 cursor.execute(query, params)
-#                 result = cursor.fetchall()[0].get(db_start_date)
-#
-#         return result
-#
-#     except psycopg.Error as e:
-#         raise HTTPException(status_code=500, detail="Database error") from e
-
-
-if __name__ == "__main__":
-    result = get_price_data(
-        price_metadata_id=1,
-        start_date=datetime(year=2026, month=6, day=1, tzinfo=pytz.UTC),
-        end_date=datetime(year=2026, month=6, day=5, tzinfo=pytz.UTC),
-    )
+    return [bidding_zone for (bidding_zone,) in result]
