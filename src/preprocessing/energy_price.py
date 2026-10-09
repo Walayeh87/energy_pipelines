@@ -4,8 +4,8 @@ from typing import Any
 import pandas as pd
 from pandas import DataFrame
 
-from src.energy_pipeline.config.energy_price_keys_in_api import EnergyChartsKeys
-from src.energy_pipeline.database.models import PriceData
+from src.config.energy_price_keys_in_api import EnergyChartsKeys
+from src.database.models import PriceData
 
 logger = logging.getLogger(__name__)
 

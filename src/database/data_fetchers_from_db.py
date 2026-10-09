@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 
-from src.energy_pipeline.database.models import PriceMetadata, Regions
+from src.database.models import PriceMetadata, Regions
 
 
 def get_bidding_zone_and_price_metadata_ids_mapper(session: Session, bidding_zones: list[str]) -> dict[str, int]:
