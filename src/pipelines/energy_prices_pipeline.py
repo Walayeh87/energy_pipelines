@@ -8,7 +8,7 @@ from src.database.data_fetchers_from_db import (
 from src.database.data_upsertion import upsert_energy_prices_to_db
 from src.ingestion.api_fetcher import fetch_data_from_api
 from src.ingestion.url_creation import create_url_for_tomorrows_energy_prices
-from src.preprocessing.energy_price import preprocess_energy_price
+from src.preprocessing.energy_price_preprocessing import preprocess_energy_price
 from utils.logging_config import setup_logging
 
 setup_logging()
