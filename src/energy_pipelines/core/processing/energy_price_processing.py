@@ -93,7 +93,9 @@ def process_energy_price_data(
         )
 
     if db_freq != actual_freq:
-        logger.error(f"Energy price frequency mismatch: expected '{db_freq_as_str}', got '{actual_freq_as_str}'")
+        logger.error(
+            f"Energy price frequency mismatch: expected '{db_freq_as_str}', got '{actual_freq_as_str}'"
+        )
         return EnergyPriceProcessingResult(
             original_prices=original_prices,
             processed_prices=original_prices,

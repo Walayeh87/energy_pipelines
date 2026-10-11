@@ -32,8 +32,12 @@ def _convert_energy_price_to_df(
     if len(data_as_dict) == 0:
         raise ValueError("data_as_dict must not be empty.")
 
-    if (len(data_as_dict[EnergyChartsKeys.UNIX_SECONDS]) == 0) or (len(data_as_dict[EnergyChartsKeys.PRICE]) == 0):
-        raise ValueError(f"{EnergyChartsKeys.UNIX_SECONDS} and/or {EnergyChartsKeys.PRICE} contain(s) no data.")
+    if (len(data_as_dict[EnergyChartsKeys.UNIX_SECONDS]) == 0) or (
+        len(data_as_dict[EnergyChartsKeys.PRICE]) == 0
+    ):
+        raise ValueError(
+            f"{EnergyChartsKeys.UNIX_SECONDS} and/or {EnergyChartsKeys.PRICE} contain(s) no data."
+        )
 
     timestamp_key = PriceData.timestamp.key
     metadata_id_key = PriceData.price_metadata_id.key

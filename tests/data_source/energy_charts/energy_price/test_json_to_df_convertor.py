@@ -33,7 +33,9 @@ def test_convert_energy_price_from_dict_to_df() -> None:
         PriceKeyInEnergyCharts.UNIX_SECONDS: [1700000000, 1700003600],
         PriceKeyInEnergyCharts.PRICE: [50.0, 51.0],
     }
-    data_as_df = process_fetched_energy_price_from_external_source(data_as_dict=data_as_dict, price_metadata_id=1)
+    data_as_df = process_fetched_energy_price_from_external_source(
+        data_as_dict=data_as_dict, price_metadata_id=1
+    )
 
     assert isinstance(data_as_df, DataFrame)
     assert len(data_as_df) == 2

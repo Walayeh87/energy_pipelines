@@ -8,7 +8,9 @@ from energy_pipelines.core.database.connection import create_db_engine, create_s
 from energy_pipelines.core.database.models import PriceData, PriceMetadata, Regions
 
 
-def fetch_bidding_zone_and_price_metadata_ids_mapper(session: Session, bidding_zones: list[str]) -> dict[str, int]:
+def fetch_bidding_zone_and_price_metadata_ids_mapper(
+    session: Session, bidding_zones: list[str]
+) -> dict[str, int]:
     mapper = {}
     for bidding_zone in bidding_zones:
         result = (

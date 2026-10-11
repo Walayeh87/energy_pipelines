@@ -34,8 +34,12 @@ def upsert_daily_energy_price_to_db(update_on_conflict: bool = False) -> None:
 
         prices_url = create_url_for_tomorrows_energy_prices(bidding_zone=bidding_zone)
         prices_as_dict = fetch_data_from_api(url=prices_url)
-        prices_as_df = preprocess_energy_price(prices_as_dict=prices_as_dict, price_metadata_id=price_metadata_id)
-        upsert_energy_prices_to_db(session=session, prices=prices_as_df, update_on_conflict=update_on_conflict)
+        prices_as_df = preprocess_energy_price(
+            prices_as_dict=prices_as_dict, price_metadata_id=price_metadata_id
+        )
+        upsert_energy_prices_to_db(
+            session=session, prices=prices_as_df, update_on_conflict=update_on_conflict
+        )
 
     logger.info("Daily upserting process completed.")
 

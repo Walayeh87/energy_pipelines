@@ -57,7 +57,9 @@ def fetch_data_from_api(
 
         except RequestException as e:
             if attempt == max_attempts:
-                raise RuntimeError(f"Failed to fetch data from the source after {max_attempts} attempts.") from e
+                raise RuntimeError(
+                    f"Failed to fetch data from the source after {max_attempts} attempts."
+                ) from e
 
             logger.warning(f"Attempt {attempt} failed: {e}. Retrying in {retry_delay_in_s} seconds...")
             time.sleep(retry_delay_in_s)
