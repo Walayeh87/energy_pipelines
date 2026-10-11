@@ -1,7 +1,6 @@
 from unittest.mock import MagicMock
 
 import pandas as pd
-
 from data_source.energy_charts.energy_price.data_upsertion import upsert_df_to_db
 from data_source.energy_charts.energy_price.price_col_name_in_db import (
     PriceDataColNameInDB,

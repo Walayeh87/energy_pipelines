@@ -37,9 +37,7 @@ class Regions(Base):
     name: Mapped[str] = mapped_column(String(50), nullable=False)
 
     def __repr__(self) -> str:
-        return (
-            f"{SchemaNames.ENERGY_PRICES}.{self.__tablename__}(bidding_zone={self.bidding_zone!r}, name={self.name!r}, "
-        )
+        return f"{SchemaNames.ENERGY_PRICES}.{self.__tablename__}(bidding_zone={self.bidding_zone!r}, name={self.name!r}, "
 
 
 class PriceMetadata(Base):

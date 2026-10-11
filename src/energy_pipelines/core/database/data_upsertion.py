@@ -48,7 +48,9 @@ def upsert_energy_prices_to_db(session: Session, prices: DataFrame, update_on_co
     session.commit()
 
 
-def _check_price_existence(session: Session, timestamps: Series[datetime], price_metadata_ids: Series[int]) -> bool:
+def _check_price_existence(
+    session: Session, timestamps: Series[datetime], price_metadata_ids: Series[int]
+) -> bool:
     keys = list(zip(timestamps.tolist(), price_metadata_ids.tolist(), strict=True))
 
     if not keys:

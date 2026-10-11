@@ -19,7 +19,9 @@ def fetch_bidding_zone_and_price_metadata_ids_mapper(session: Session, bidding_z
             .all()
         )
         invalid_id_value = 0
-        price_metadata_id = [price_metadata_id for (price_metadata_id,) in result][0] if result else invalid_id_value
+        price_metadata_id = (
+            [price_metadata_id for (price_metadata_id,) in result][0] if result else invalid_id_value
+        )
         mapper[bidding_zone] = price_metadata_id
 
     return mapper

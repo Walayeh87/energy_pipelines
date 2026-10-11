@@ -1,9 +1,8 @@
-from pandas import Series
-
 from data_source.db.energy_price.processing import process_fetched_energy_prices_from_db
 from data_source.energy_charts.energy_price.price_col_name_in_db import (
     PriceDataColNameInDB,
 )
+from pandas import Series
 
 
 def test_process_fetched_energy_prices_from_db() -> None:

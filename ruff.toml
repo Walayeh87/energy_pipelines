@@ -2,7 +2,7 @@
 extend-exclude = ["*.ipynb"]
 
 # Formatting specifications
-line-length = 120
+line-length = 115
 indent-width = 4
 
 [lint.pydocstyle]

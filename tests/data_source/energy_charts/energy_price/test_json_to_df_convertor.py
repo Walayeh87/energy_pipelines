@@ -3,14 +3,13 @@ import pytest
 from data_source.energy_charts.energy_price.price_col_name_in_db import (
     PriceDataColNameInDB,
 )
-from pandas import DataFrame, Series, Timestamp
-
 from data_source.energy_charts.energy_price.price_key_in_energy_charts import (
     PriceKeyInEnergyCharts,
 )
 from data_source.energy_charts.energy_price.processing import (
     process_fetched_energy_price_from_external_source,
 )
+from pandas import DataFrame, Series, Timestamp
 
 
 def test_convert_energy_price_from_dict_to_df_with_empty_dict() -> None:
@@ -24,7 +23,9 @@ def test_convert_energy_price_from_dict_to_df_with_empty_keys() -> None:
             PriceKeyInEnergyCharts.UNIX_SECONDS: [],
             PriceKeyInEnergyCharts.PRICE: [],
         }
-        process_fetched_energy_price_from_external_source(data_as_dict=data_as_dict, price_metadata_id=int(value=1))
+        process_fetched_energy_price_from_external_source(
+            data_as_dict=data_as_dict, price_metadata_id=int(value=1)
+        )
 
 
 def test_convert_energy_price_from_dict_to_df() -> None:

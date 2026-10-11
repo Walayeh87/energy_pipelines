@@ -1,17 +1,16 @@
 from datetime import datetime
 from unittest.mock import MagicMock, patch
 
+import data_source
 import psycopg
 import pytest
 import pytz
-from fastapi.testclient import TestClient
-
-import data_source
 from data_source.data_fetchers_from_db import app
 from data_source.energy_charts.energy_price.price_col_name_in_db import (
     PriceDataColNameInDB,
 )
 from data_source.utilities.price_structure_in_db import PriceStructureInDB
+from fastapi.testclient import TestClient
 
 test_client = TestClient(app)
 
