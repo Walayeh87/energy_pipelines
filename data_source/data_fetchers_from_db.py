@@ -11,7 +11,7 @@ from data_source.db.energy_price.queries import (
 )
 from data_source.utilities.db_connector import establish_db_connection
 from data_source.utilities.price_structure_in_db import PriceStructureInDB
-from utils.time_helpers.helpers import get_current_date
+from energy_pipelines.utils.time_helpers.helpers import get_current_date
 
 logger = logging.getLogger(__name__)
 

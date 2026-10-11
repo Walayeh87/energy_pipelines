@@ -1,7 +1,7 @@
 import logging
 from datetime import datetime, timedelta
 
-from src.config.settings import ENERGY_PRICE_URL
+from energy_pipelines.core.config.settings import ENERGY_PRICE_URL
 
 logger = logging.getLogger(__name__)
 

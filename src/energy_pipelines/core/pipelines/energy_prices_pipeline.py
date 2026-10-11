@@ -1,15 +1,15 @@
 import logging
 
-from src.database.connection import create_db_engine, create_session
-from src.database.data_fetchers_from_db import (
+from energy_pipelines.core.database.connection import create_db_engine, create_session
+from energy_pipelines.core.database.data_fetchers_from_db import (
     fetch_bidding_zone_and_price_metadata_ids_mapper,
     fetch_bidding_zones,
 )
-from src.database.data_upsertion import upsert_energy_prices_to_db
-from src.ingestion.api_fetcher import fetch_data_from_api
-from src.ingestion.url_creation import create_url_for_tomorrows_energy_prices
-from src.preprocessing.energy_price_preprocessing import preprocess_energy_price
-from utils.logging_config import setup_logging
+from energy_pipelines.core.database.data_upsertion import upsert_energy_prices_to_db
+from energy_pipelines.core.ingestion.api_fetcher import fetch_data_from_api
+from energy_pipelines.core.ingestion.url_creation import create_url_for_tomorrows_energy_prices
+from energy_pipelines.core.preprocessing.energy_price_preprocessing import preprocess_energy_price
+from energy_pipelines.utils.logging_config import setup_logging
 
 setup_logging()
 logger = logging.getLogger(__name__)

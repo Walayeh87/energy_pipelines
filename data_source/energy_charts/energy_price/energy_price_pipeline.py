@@ -14,7 +14,7 @@ from data_source.energy_charts.energy_price.url_creation import (
 )
 from data_source.utilities.db_connector import establish_db_connection
 from data_source.utilities.price_structure_in_db import PriceStructureInDB
-from utils.logging_config import setup_logging
+from energy_pipelines.utils.logging_config import setup_logging
 
 setup_logging()
 logger = logging.getLogger(__name__)

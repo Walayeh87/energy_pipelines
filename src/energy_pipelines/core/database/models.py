@@ -5,8 +5,8 @@ from enum import StrEnum
 from sqlalchemy import DateTime, ForeignKey, Integer, Numeric, String, Text
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
-from src.database.connection import create_db_engine, create_session
-from utils.logging_config import setup_logging
+from energy_pipelines.core.database.connection import create_db_engine, create_session
+from energy_pipelines.utils.logging_config import setup_logging
 
 setup_logging()
 

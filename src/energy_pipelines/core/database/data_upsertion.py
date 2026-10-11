@@ -6,7 +6,7 @@ from sqlalchemy import exists, select, tuple_
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session
 
-from src.database.models import PriceData
+from energy_pipelines.core.database.models import PriceData
 
 logger = logging.getLogger(__name__)
 

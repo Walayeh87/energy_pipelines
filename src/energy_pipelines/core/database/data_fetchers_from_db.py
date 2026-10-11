@@ -5,8 +5,8 @@ from pandas.core.frame import DataFrame
 from sqlalchemy import Row
 from sqlalchemy.orm import Session
 
-from src.database.connection import create_db_engine, create_session
-from src.database.models import PriceData, PriceMetadata, Regions
+from energy_pipelines.core.database.connection import create_db_engine, create_session
+from energy_pipelines.core.database.models import PriceData, PriceMetadata, Regions
 
 
 def fetch_bidding_zone_and_price_metadata_ids_mapper(session: Session, bidding_zones: list[str]) -> dict[str, int]:

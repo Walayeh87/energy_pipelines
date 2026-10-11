@@ -4,7 +4,7 @@ from sqlalchemy import Engine, create_engine
 from sqlalchemy.exc import NoSuchModuleError
 from sqlalchemy.orm import Session, sessionmaker
 
-from src.config.settings import DB_URL
+from energy_pipelines.core.config.settings import DB_URL
 
 logger = logging.getLogger(__name__)
 
