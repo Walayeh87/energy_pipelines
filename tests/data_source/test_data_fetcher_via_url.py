@@ -1,9 +1,8 @@
 from unittest.mock import Mock, patch
 
 import pytest
-from requests.exceptions import ConnectionError, RequestException, Timeout
-
 from data_source.data_fetcher_via_url import fetch_data
+from requests.exceptions import ConnectionError, RequestException, Timeout
 
 
 # Fixtures

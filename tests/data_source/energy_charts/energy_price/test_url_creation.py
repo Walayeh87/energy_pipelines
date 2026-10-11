@@ -2,7 +2,6 @@ from datetime import datetime
 from unittest.mock import patch
 
 import pytest
-
 from data_source.energy_charts.energy_price.url_creation import (
     ENERGY_PRICE_URL,  # TODO get it from DB
     create_url_for_range_of_energy_prices,
