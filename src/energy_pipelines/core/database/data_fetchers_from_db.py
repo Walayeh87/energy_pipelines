@@ -16,7 +16,6 @@ def fetch_bidding_zone_and_price_metadata_ids_mapper(
         result = (
             session.query(PriceMetadata.price_metadata_id)
             .filter(PriceMetadata.bidding_zone == bidding_zone)
-            .filter(PriceMetadata.market_type == "DAY_AHEAD")
             .all()
         )
         invalid_id_value = 0

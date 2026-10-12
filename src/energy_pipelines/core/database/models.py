@@ -20,16 +20,6 @@ class SchemaNames(StrEnum):
     SITES = "sites"
 
 
-class Markets(Base):
-    __tablename__ = "markets"
-    __table_args__ = {"schema": SchemaNames.ENERGY_PRICES}
-
-    type: Mapped[str] = mapped_column(String(10), primary_key=True, nullable=False)
-
-    def __repr__(self) -> str:
-        return f"{SchemaNames.ENERGY_PRICES}.{self.__tablename__}(type={self.type!r})"
-
-
 class Regions(Base):
     __tablename__ = "regions"
     __table_args__ = {"schema": SchemaNames.ENERGY_PRICES}
@@ -53,11 +43,6 @@ class PriceMetadata(Base):
     bidding_zone: Mapped[str | None] = mapped_column(
         String(10),
         ForeignKey(Regions.bidding_zone),
-        nullable=True,
-    )
-    market_type: Mapped[str | None] = mapped_column(
-        String(10),
-        ForeignKey(Markets.type),
         nullable=True,
     )
     freq: Mapped[str] = mapped_column(String(10), nullable=False)
