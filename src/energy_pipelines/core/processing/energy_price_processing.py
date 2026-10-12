@@ -14,7 +14,7 @@ from tspropy import (
     split_df_into_list_of_phases,
 )
 
-from energy_pipelines.core.database.connection import create_db_engine, create_session
+from energy_pipelines.core.database.connection import create_db_engine, create_db_session
 from energy_pipelines.core.database.data_fetchers_from_db import (
     DTFetchingResult,
     fetch_dt_data,
@@ -175,7 +175,7 @@ def _fill_outer_missing_energy_prices(prices: DataFrame) -> DataFrame:
 
 if __name__ == "__main__":
     db_engine = create_db_engine()
-    session = create_session(db_engine)
+    session = create_db_session(db_engine)
 
     start_date = datetime(2026, 7, 1)
     end_date = datetime(2026, 7, 2)

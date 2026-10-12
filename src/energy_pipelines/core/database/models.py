@@ -5,7 +5,7 @@ from enum import StrEnum
 from sqlalchemy import DateTime, ForeignKey, Integer, Numeric, String, Text
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
-from energy_pipelines.core.database.connection import create_db_engine, create_session
+from energy_pipelines.core.database.connection import create_db_engine, create_db_session
 from energy_pipelines.utils.logging_config import setup_logging
 
 setup_logging()
@@ -102,7 +102,7 @@ class PriceData(Base):
 
 def main() -> None:
     db_engine = create_db_engine()
-    session = create_session(db_engine)
+    session = create_db_session(db_engine)
     Base.metadata.create_all(db_engine)
     rows = session.query(PriceData).limit(50).all()
 

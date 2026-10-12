@@ -4,7 +4,7 @@ from typing import Any
 
 from sqlalchemy.orm import InstrumentedAttribute, Session
 
-from energy_pipelines.core.database.connection import create_db_engine, create_session
+from energy_pipelines.core.database.connection import create_db_engine, create_db_session
 from energy_pipelines.core.database.models import PriceData, PriceMetadata, Regions
 
 
@@ -68,7 +68,7 @@ def fetch_dt_data(
 
 if __name__ == "__main__":
     db_engine = create_db_engine()
-    session = create_session(db_engine)
+    session = create_db_session(db_engine)
 
     metadata = fetch_price_metadata(session, metadata_id=1)
 

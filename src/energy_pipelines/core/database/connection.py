@@ -25,7 +25,7 @@ def create_db_engine() -> Engine:
     return db_engine
 
 
-def create_session(db_engine: Engine) -> Session:
+def create_db_session(db_engine: Engine) -> Session:
     try:
         session = sessionmaker(bind=db_engine)
     except Exception as e:
