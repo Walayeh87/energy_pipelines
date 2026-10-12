@@ -15,7 +15,7 @@ setup_logging()
 logger = logging.getLogger(__name__)
 
 
-def upsert_daily_energy_price_to_db(update_on_conflict: bool = False) -> None:
+def upsert_daily_energy_price(update_on_conflict: bool = False) -> None:
     db_engine = create_db_engine()
     session = create_session(db_engine=db_engine)
 
@@ -45,4 +45,4 @@ def upsert_daily_energy_price_to_db(update_on_conflict: bool = False) -> None:
 
 
 if __name__ == "__main__":
-    upsert_daily_energy_price_to_db(update_on_conflict=False)
+    upsert_daily_energy_price(update_on_conflict=False)
