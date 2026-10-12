@@ -2,7 +2,7 @@ from datetime import datetime
 from decimal import Decimal
 from enum import StrEnum
 
-from sqlalchemy import DateTime, ForeignKey, Integer, Numeric, String, Text
+from sqlalchemy import DOUBLE_PRECISION, BigInteger, DateTime, ForeignKey, Integer, Numeric, String, Text
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 from energy_pipelines.core.database.connection import create_db_engine, create_db_session
@@ -17,6 +17,7 @@ class Base(DeclarativeBase):
 
 class SchemaNames(StrEnum):
     ENERGY_PRICES = "energy_prices"
+    SITES = "sites"
 
 
 class Markets(Base):
@@ -97,6 +98,55 @@ class PriceData(Base):
             f"timestamp={self.timestamp}, "
             f"price_metadata_id={self.price_metadata_id}, "
             f"energy_price={self.energy_price})"
+        )
+
+
+class Site(Base):
+    __tablename__ = "site"
+    __table_args__ = {"schema": SchemaNames.SITES}
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    name: Mapped[str] = mapped_column(String(50), nullable=False, unique=True)
+    bidding_zone: Mapped[str] = mapped_column(
+        String(10),
+        ForeignKey(Regions.bidding_zone),
+        nullable=False,
+    )
+    address: Mapped[str] = mapped_column(String(100), nullable=True)
+    country: Mapped[str] = mapped_column(String(50), nullable=True)
+    subdivision: Mapped[str] = mapped_column(String(50), nullable=True)
+    tz: Mapped[str] = mapped_column(String(50), nullable=False)
+
+    def __repr__(self) -> str:
+        return (
+            f"{SchemaNames.SITES}.{self.__tablename__}("
+            f"id={self.id!r}, "
+            f"name={self.name!r}, "
+            f"address={self.address!r}, "
+            f"country={self.country!r}, "
+            f"subdivision={self.subdivision!r}, "
+            f"tz={self.tz!r})"
+        )
+
+
+class CoolingSpecs(Base):
+    __tablename__ = "cooling_specs"
+    __table_args__ = {"schema": SchemaNames.SITES}
+
+    site_id: Mapped[int] = mapped_column(
+        BigInteger, ForeignKey(Site.id, ondelete="CASCADE"), primary_key=True
+    )
+    min_temp: Mapped[Decimal] = mapped_column(DOUBLE_PRECISION, nullable=False)
+    max_temp: Mapped[Decimal] = mapped_column(DOUBLE_PRECISION, nullable=False)
+    default_temp: Mapped[Decimal] = mapped_column(DOUBLE_PRECISION, nullable=False)
+
+    def __repr__(self) -> str:
+        return (
+            f"{SchemaNames.SITES}.{self.__tablename__}("
+            f"site_id={self.site_id!r}, "
+            f"min_temp={self.min_temp!r}, "
+            f"max_temp={self.max_temp!r}, "
+            f"default_temp={self.default_temp!r})"
         )
 
 
