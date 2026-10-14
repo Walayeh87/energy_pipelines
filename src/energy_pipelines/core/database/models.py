@@ -5,7 +5,6 @@ from enum import StrEnum
 from sqlalchemy import DOUBLE_PRECISION, BigInteger, DateTime, ForeignKey, Integer, Numeric, String, Text
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
-from energy_pipelines.core.database.connection import create_db_engine, create_db_session
 from energy_pipelines.utils.logging_config import setup_logging
 
 setup_logging()
@@ -28,7 +27,11 @@ class Regions(Base):
     name: Mapped[str] = mapped_column(String(50), nullable=False)
 
     def __repr__(self) -> str:
-        return f"{SchemaNames.ENERGY_PRICES}.{self.__tablename__}(bidding_zone={self.bidding_zone!r}, name={self.name!r}, "
+        return (
+            f"{SchemaNames.ENERGY_PRICES}.{self.__tablename__}"
+            f"(bidding_zone={self.bidding_zone!r}, "
+            f"name={self.name!r} "
+        )
 
 
 class PriceMetadata(Base):
@@ -56,7 +59,6 @@ class PriceMetadata(Base):
             f"{SchemaNames.ENERGY_PRICES}.{self.__tablename__}("
             f"price_metadata_id={self.price_metadata_id!r}, "
             f"bidding_zone={self.bidding_zone!r}, "
-            f"market_type={self.market_type!r}, "
             f"freq={self.freq!r}, "
             f"source={self.source!r}, "
             f"unit={self.unit!r}, "
@@ -129,21 +131,7 @@ class CoolingSpecs(Base):
         return (
             f"{SchemaNames.SITES}.{self.__tablename__}("
             f"site_id={self.site_id!r}, "
-            f"min_temp={self.min_temp!r}, "
-            f"max_temp={self.max_temp!r}, "
-            f"default_temp={self.default_temp!r})"
+            f"min_temp={self.min_temp}, "
+            f"max_temp={self.max_temp}, "
+            f"default_temp={self.default_temp})"
         )
-
-
-def main() -> None:
-    db_engine = create_db_engine()
-    session = create_db_session(db_engine)
-    Base.metadata.create_all(db_engine)
-    rows = session.query(PriceData).limit(50).all()
-
-    for row in rows:
-        print(row)
-
-
-if __name__ == "__main__":
-    main()
