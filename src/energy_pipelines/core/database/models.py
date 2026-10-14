@@ -2,7 +2,7 @@ from datetime import datetime
 from decimal import Decimal
 from enum import StrEnum
 
-from sqlalchemy import DOUBLE_PRECISION, BigInteger, DateTime, ForeignKey, Integer, Numeric, String, Text
+from sqlalchemy import DOUBLE_PRECISION, BigInteger, DateTime, ForeignKey, Numeric, String, Text
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 from energy_pipelines.utils.logging_config import setup_logging
@@ -39,14 +39,14 @@ class PriceMetadata(Base):
     __table_args__ = {"schema": SchemaNames.ENERGY_PRICES}
 
     price_metadata_id: Mapped[int] = mapped_column(
-        Integer,
+        BigInteger,
         primary_key=True,
         autoincrement=True,
     )
-    bidding_zone: Mapped[str | None] = mapped_column(
+    bidding_zone: Mapped[str] = mapped_column(
         String(10),
         ForeignKey(Regions.bidding_zone),
-        nullable=True,
+        nullable=False,
     )
     freq: Mapped[str] = mapped_column(String(10), nullable=False)
     important_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
@@ -72,7 +72,7 @@ class PriceData(Base):
 
     timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), primary_key=True)
     price_metadata_id: Mapped[int] = mapped_column(
-        Integer,
+        BigInteger,
         ForeignKey(PriceMetadata.price_metadata_id),
         nullable=False,
         primary_key=True,
