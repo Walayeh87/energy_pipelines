@@ -1,7 +1,7 @@
 import logging
-from datetime import datetime, timedelta
 
 from energy_pipelines.core.config.settings import ENERGY_PRICE_URL
+from energy_pipelines.utils.time_helpers import get_tomorrows_date
 
 logger = logging.getLogger(__name__)
 
@@ -15,8 +15,3 @@ def create_url_for_tomorrows_energy_prices(bidding_zone: str) -> str:
     logger.info(f"The energy-price-URL '{url}' has been created.")
 
     return url
-
-
-def get_tomorrows_date() -> datetime:
-    date = datetime.now().date() + timedelta(days=1)
-    return datetime(year=date.year, month=date.month, day=date.day)

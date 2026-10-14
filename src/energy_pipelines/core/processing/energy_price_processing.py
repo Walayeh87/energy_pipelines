@@ -20,7 +20,7 @@ from energy_pipelines.core.database.data_fetchers_from_db import (
     fetch_dt_data,
     fetch_price_metadata,
 )
-from energy_pipelines.core.database.models import PriceData
+from energy_pipelines.core.database.models import PriceData, PriceMetadata, SchemaNames
 
 logger = logging.getLogger(__name__)
 
@@ -52,7 +52,8 @@ def process_energy_price_data(
         logger.warning(
             f"No price data found for the specified period:"
             f" {fetching_result.start} to {fetching_result.end}"
-            f" for price metadata ID {fetching_result.data_id}"
+            f" for {PriceMetadata.price_metadata_id.key} {fetching_result.data_id} in "
+            f"{SchemaNames.ENERGY_PRICES}.{PriceMetadata.__tablename__}"
         )
         return EnergyPriceProcessingResult(
             original_prices=DataFrame(),
@@ -181,7 +182,7 @@ if __name__ == "__main__":
     end_date = datetime(2026, 7, 2)
     fetching_result = fetch_dt_data(
         session=session,
-        cols2fetch=[PriceData.timestamp, PriceData.energy_price, PriceData.price_metadata_id],
+        cols2fetch=[PriceData.timestamp, PriceData.energy_price],
         data_id=1,
         start=start_date,
         end=end_date,
