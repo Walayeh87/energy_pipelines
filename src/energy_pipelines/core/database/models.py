@@ -47,6 +47,7 @@ class PriceMetadata(Base):
         String(10),
         ForeignKey(Regions.bidding_zone),
         nullable=False,
+        unique=True,
     )
     freq: Mapped[str] = mapped_column(String(10), nullable=False)
     important_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
