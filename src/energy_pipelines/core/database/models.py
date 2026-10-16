@@ -113,7 +113,7 @@ class Site(Base):
             f"address={self.address!r}, "
             f"country={self.country!r}, "
             f"subdivision={self.subdivision!r}, "
-            f"tz={self.tz!r})"
+            f"tz={self.tz!r}, "
         )
 
 
@@ -127,6 +127,7 @@ class CoolingSpecs(Base):
     min_temp: Mapped[Decimal] = mapped_column(DOUBLE_PRECISION, nullable=False)
     max_temp: Mapped[Decimal] = mapped_column(DOUBLE_PRECISION, nullable=False)
     default_temp: Mapped[Decimal] = mapped_column(DOUBLE_PRECISION, nullable=False)
+    temp_unit: Mapped[str] = mapped_column(String(10), nullable=False)
 
     def __repr__(self) -> str:
         return (
@@ -134,5 +135,6 @@ class CoolingSpecs(Base):
             f"site_id={self.site_id!r}, "
             f"min_temp={self.min_temp}, "
             f"max_temp={self.max_temp}, "
-            f"default_temp={self.default_temp})"
+            f"default_temp={self.default_temp}, "
+            f"temp_unit={self.temp_unit!r})"
         )
