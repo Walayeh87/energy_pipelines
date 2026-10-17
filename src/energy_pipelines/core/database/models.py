@@ -98,6 +98,14 @@ class Algo(Base):
     name: Mapped[str] = mapped_column(String(50), nullable=False, unique=True)
     notes: Mapped[str | None] = mapped_column(String(500), nullable=True)
 
+    def __repr__(self) -> str:
+        return (
+            f"{SchemaNames.ALGOS}.{self.__tablename__}("
+            f"id={self.id!r}, "
+            f"name={self.name!r}, "
+            f"notes={self.notes!r})"
+        )
+
 
 class Site(Base):
     __tablename__ = "site"
@@ -144,6 +152,16 @@ class SiteAlgos(Base):
     params: Mapped[dict] = mapped_column(JSONB, nullable=False)
     is_active: Mapped[bool] = mapped_column(BOOLEAN, nullable=False, default=True)
     notes: Mapped[str | None] = mapped_column(String(500), nullable=True)
+
+    def __repr__(self) -> str:
+        return (
+            f"{SchemaNames.SITES}.{self.__tablename__}("
+            f"site_id={self.site_id!r}, "
+            f"algo_id={self.algo_id!r}, "
+            f"params={self.params!r}, "
+            f"is_active={self.is_active!r}, "
+            f"notes={self.notes!r})"
+        )
 
 
 class CoolingSpecs(Base):
