@@ -1,5 +1,4 @@
 from datetime import datetime
-from decimal import Decimal
 from enum import StrEnum
 
 from sqlalchemy import DOUBLE_PRECISION, BigInteger, DateTime, ForeignKey, Numeric, String, Text
@@ -78,7 +77,7 @@ class PriceData(Base):
         nullable=False,
         primary_key=True,
     )
-    energy_price: Mapped[Decimal | None] = mapped_column(Numeric, nullable=True)
+    energy_price: Mapped[int | float | None] = mapped_column(Numeric, nullable=True)
 
     def __repr__(self) -> str:
         return (
@@ -124,9 +123,9 @@ class CoolingSpecs(Base):
     site_id: Mapped[int] = mapped_column(
         BigInteger, ForeignKey(Site.id, ondelete="CASCADE"), primary_key=True
     )
-    min_temp: Mapped[Decimal] = mapped_column(DOUBLE_PRECISION, nullable=False)
-    max_temp: Mapped[Decimal] = mapped_column(DOUBLE_PRECISION, nullable=False)
-    default_temp: Mapped[Decimal] = mapped_column(DOUBLE_PRECISION, nullable=False)
+    min_temp: Mapped[int | float] = mapped_column(DOUBLE_PRECISION, nullable=False)
+    max_temp: Mapped[int | float] = mapped_column(DOUBLE_PRECISION, nullable=False)
+    default_temp: Mapped[int | float] = mapped_column(DOUBLE_PRECISION, nullable=False)
     temp_unit: Mapped[str] = mapped_column(String(10), nullable=False)
 
     def __repr__(self) -> str:
