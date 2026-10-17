@@ -7,7 +7,6 @@ import pandas as pd
 from pandas import Timedelta
 from pandas.core.frame import DataFrame
 from pandas.core.series import Series
-from sqlalchemy.orm import Session
 from tspropy import (
     convert_timedelta_to_human_format,
     infer_index_freq,
@@ -18,7 +17,6 @@ from energy_pipelines.core.database.connection import create_db_engine, create_d
 from energy_pipelines.core.database.data_fetchers_from_db import (
     DTFetchingResult,
     fetch_dt_data,
-    fetch_price_metadata,
 )
 from energy_pipelines.core.database.models import PriceData, PriceMetadata, SchemaNames
 
@@ -44,8 +42,9 @@ class EnergyPriceProcessingResult:
 
 
 def process_energy_price_data(
-    session: Session,
     fetching_result: DTFetchingResult,
+    price_tz: str,
+    price_freq: str,
 ) -> EnergyPriceProcessingResult:
     prices_as_list = fetching_result.dt_data
     if len(prices_as_list) == 0:
@@ -62,24 +61,20 @@ def process_energy_price_data(
             processing_issue=ProcessingIssues.EMPTY_DATA,
         )
 
-    price_metadata = fetch_price_metadata(session=session, metadata_id=fetching_result.data_id)
-
     prices = DataFrame(prices_as_list)
     prices = prices.set_index(PriceData.timestamp.key)
-    prices.index = prices.index.tz_convert(price_metadata.tz)
+    prices.index = prices.index.tz_convert(price_tz)
 
     original_prices = prices
 
-    db_freq_as_str = str(price_metadata.freq)
-    db_freq = Timedelta(db_freq_as_str)
     actual_freq = infer_index_freq(index=prices.index)
     actual_freq_as_str = convert_timedelta_to_human_format(timedelta=actual_freq)
 
     expected_index = pd.date_range(
         start=fetching_result.start,
-        end=fetching_result.end - db_freq,
-        freq=db_freq,
-        tz=str(price_metadata.tz),
+        end=fetching_result.end - Timedelta(price_freq),
+        freq=price_freq,
+        tz=price_tz,
     )
 
     no_missing_prices = not prices[PriceData.energy_price.key].isna().any()
@@ -93,10 +88,8 @@ def process_energy_price_data(
             processing_issue=ProcessingIssues.NONE,
         )
 
-    if db_freq != actual_freq:
-        logger.error(
-            f"Energy price frequency mismatch: expected '{db_freq_as_str}', got '{actual_freq_as_str}'"
-        )
+    if Timedelta(price_freq) != actual_freq:
+        logger.error(f"Energy price frequency mismatch: expected '{price_freq}', got '{actual_freq_as_str}'")
         return EnergyPriceProcessingResult(
             original_prices=original_prices,
             processed_prices=original_prices,
@@ -105,13 +98,13 @@ def process_energy_price_data(
         )
 
     duration = fetching_result.end - fetching_result.start
-    expected_prices_count = duration // db_freq
+    expected_prices_count = duration // Timedelta(price_freq)
     actual_prices_count = len(prices)
 
     has_length_mismatch = expected_prices_count != actual_prices_count
     contains_nans = prices[PriceData.energy_price.key].isna().any()
     if has_length_mismatch or contains_nans:
-        logger.warning("Energy prices contain missing values and/or indices.")
+        logger.warning("Energy prices contain missing values and/or missing indices.")
 
         prices = prices.reindex(expected_index)
         mask_of_nans = prices[PriceData.energy_price.key].isna()
@@ -178,8 +171,8 @@ if __name__ == "__main__":
     db_engine = create_db_engine()
     session = create_db_session(db_engine)
 
-    start_date = datetime(2026, 7, 1)
-    end_date = datetime(2026, 7, 2)
+    start_date = datetime(2026, 10, 1)
+    end_date = datetime(2026, 10, 2)
     fetching_result = fetch_dt_data(
         session=session,
         cols2fetch=[PriceData.timestamp, PriceData.energy_price],
@@ -188,4 +181,4 @@ if __name__ == "__main__":
         end=end_date,
     )
 
-    result = process_energy_price_data(session, fetching_result)
+    result = process_energy_price_data(fetching_result=fetching_result, price_tz="UTC", price_freq="15min")
