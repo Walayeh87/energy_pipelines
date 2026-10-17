@@ -141,7 +141,7 @@ class SiteAlgos(Base):
         ForeignKey(Algo.id, ondelete="RESTRICT"),
         primary_key=True,
     )
-    params: Mapped[dict] = mapped_column(JSONB, nullable=True)
+    params: Mapped[dict] = mapped_column(JSONB, nullable=False)
     is_active: Mapped[bool] = mapped_column(BOOLEAN, nullable=False, default=True)
     notes: Mapped[str | None] = mapped_column(String(500), nullable=True)
 
