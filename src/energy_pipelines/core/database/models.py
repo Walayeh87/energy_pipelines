@@ -29,7 +29,7 @@ class Regions(Base):
 
     def __repr__(self) -> str:
         return (
-            f"{SchemaNames.ENERGY_PRICES}.{self.__tablename__}"
+            f"{self.__table_args__['schema']}.{self.__tablename__}"
             f"(bidding_zone={self.bidding_zone!r}, "
             f"name={self.name!r} "
         )
@@ -58,7 +58,7 @@ class PriceMetadata(Base):
 
     def __repr__(self) -> str:
         return (
-            f"{SchemaNames.ENERGY_PRICES}.{self.__tablename__}("
+            f"{self.__table_args__['schema']}.{self.__tablename__}("
             f"price_metadata_id={self.price_metadata_id!r}, "
             f"bidding_zone={self.bidding_zone!r}, "
             f"freq={self.freq!r}, "
@@ -83,7 +83,7 @@ class PriceData(Base):
 
     def __repr__(self) -> str:
         return (
-            f"{SchemaNames.ENERGY_PRICES}.{self.__tablename__}("
+            f"{self.__table_args__['schema']}.{self.__tablename__}("
             f"timestamp={self.timestamp}, "
             f"price_metadata_id={self.price_metadata_id}, "
             f"energy_price={self.energy_price})"
@@ -100,7 +100,7 @@ class Algo(Base):
 
     def __repr__(self) -> str:
         return (
-            f"{SchemaNames.ALGOS}.{self.__tablename__}("
+            f"{self.__table_args__['schema']}.{self.__tablename__}("
             f"id={self.id!r}, "
             f"name={self.name!r}, "
             f"notes={self.notes!r})"
@@ -125,7 +125,7 @@ class Site(Base):
 
     def __repr__(self) -> str:
         return (
-            f"{SchemaNames.SITES}.{self.__tablename__}("
+            f"{self.__table_args__['schema']}.{self.__tablename__}("
             f"id={self.id!r}, "
             f"name={self.name!r}, "
             f"address={self.address!r}, "
@@ -155,7 +155,7 @@ class SiteAlgos(Base):
 
     def __repr__(self) -> str:
         return (
-            f"{SchemaNames.SITES}.{self.__tablename__}("
+            f"{self.__table_args__['schema']}.{self.__tablename__}("
             f"site_id={self.site_id!r}, "
             f"algo_id={self.algo_id!r}, "
             f"params={self.params!r}, "
@@ -178,7 +178,7 @@ class CoolingSpecs(Base):
 
     def __repr__(self) -> str:
         return (
-            f"{SchemaNames.SITES}.{self.__tablename__}("
+            f"{self.__table_args__['schema']}.{self.__tablename__}("
             f"site_id={self.site_id!r}, "
             f"min_temp={self.min_temp}, "
             f"max_temp={self.max_temp}, "
