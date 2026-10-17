@@ -5,15 +5,13 @@ from pandas import Timedelta
 from energy_pipelines.core.algos.temp_schedule_creator import create_backup_temp_schedule
 from energy_pipelines.core.database.connection import create_db_engine, create_db_session
 from energy_pipelines.core.database.data_fetchers_from_db import (
-    fetch_all_site_ids,
+    fetch_all_site_ids_in_cooling_specs,
     fetch_all_site_names,
-    fetch_bidding_zone_and_price_metadata_id_as_mapper,
     fetch_cooling_specs,
+    fetch_data_id_by_bidding_zone,
     fetch_dt_data,
-    fetch_site_bidding_zone,
-    fetch_site_name_and_id_as_mapper,
-    fetch_site_tz,
-    fetch_temp_unit,
+    fetch_price_metadata,
+    fetch_site,
 )
 from energy_pipelines.core.database.models import CoolingSpecs, PriceData, SchemaNames, Site
 from energy_pipelines.core.processing.energy_price_processing import process_energy_price_data
@@ -47,23 +45,19 @@ def upsert_temp_schedule(site_names: list[str] | str = "all") -> None:
 
         logger.info(f"Start temperature schedule upsertion process for site '{site_name}'.")
 
-        site_name_and_id_mapper = fetch_site_name_and_id_as_mapper(session=session)
-        site_id = site_name_and_id_mapper[site_name]
+        site = fetch_site(session=session, site_name=site_name)
+        cooling_specs = fetch_cooling_specs(session=session, site_id=site.id)
 
-        site_ids_in_cooling_specs = fetch_all_site_ids(session=session)
-        if site_id not in site_ids_in_cooling_specs:
+        site_ids_in_cooling_specs = fetch_all_site_ids_in_cooling_specs(session=session)
+        if site.id not in site_ids_in_cooling_specs:
             logger.warning(
                 f"No temperature schedule will be created for site '{site_name}',"
-                f" since there is no corresponding site_id {site_id} found in table"
+                f" since there is no corresponding site_id {site.id} found in table"
                 f" '{SchemaNames.SITES}.{CoolingSpecs.__tablename__}'."
             )
             continue
 
-        site_bidding_zone = fetch_site_bidding_zone(session=session, site_id=site_id)
-        bidding_zone_and_price_metadata_id_as_mapper = fetch_bidding_zone_and_price_metadata_id_as_mapper(
-            session=session
-        )
-        data_id = bidding_zone_and_price_metadata_id_as_mapper[site_bidding_zone]
+        data_id = fetch_data_id_by_bidding_zone(session=session, bidding_zone=site.bidding_zone)
 
         energy_price_fetching_result = fetch_dt_data(
             session=session,
@@ -73,27 +67,31 @@ def upsert_temp_schedule(site_names: list[str] | str = "all") -> None:
             end=get_tomorrows_date() + Timedelta(days=1),
         )
 
+        price_metadata = fetch_price_metadata(
+            session=session,
+            metadata_id=energy_price_fetching_result.data_id,
+        )
+
         energy_price_processing_result = process_energy_price_data(
-            session=session, fetching_result=energy_price_fetching_result
+            fetching_result=energy_price_fetching_result,
+            price_tz=price_metadata.tz,
+            price_freq=price_metadata.freq,
         )
 
         algo_freq = "15min"  # TODO: get it from DB
-        cooling_specs_fetching_result = fetch_cooling_specs(session=session, site_id=site_id)
-        temp_unit = fetch_temp_unit(session=session, site_id=site_id)
-        site_tz = fetch_site_tz(session=session, site_name=site_name)
 
         energy_prices_not_available = energy_price_processing_result.processing_issue.EMPTY_DATA
         have_unknown_issues = energy_price_processing_result.processing_issue.UNKNOWN
         if energy_prices_not_available or have_unknown_issues:
             logger.warning(
-                f"Default temperature schedule of constant {cooling_specs_fetching_result.default_temp}"
-                f" {temp_unit} will be created for site '{site_name}', since there is"
+                f"Default temperature schedule of constant {cooling_specs.default_temp}"
+                f" {cooling_specs.temp_unit} will be created for site '{site_name}', since there is"
                 f" no energy price available."
             )
             temp_schedule = create_backup_temp_schedule(
                 algo_freq=algo_freq,
-                default_temp=cooling_specs_fetching_result.default_temp,
-                tz=site_tz,
+                default_temp=cooling_specs.default_temp,
+                tz=site.tz,
             )
             continue
 
