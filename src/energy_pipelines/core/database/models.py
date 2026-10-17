@@ -1,7 +1,8 @@
 from datetime import datetime
 from enum import StrEnum
 
-from sqlalchemy import DOUBLE_PRECISION, BigInteger, DateTime, ForeignKey, Numeric, String, Text
+from sqlalchemy import BOOLEAN, DOUBLE_PRECISION, BigInteger, DateTime, ForeignKey, Numeric, String, Text
+from sqlalchemy.dialects.sqlite import JSONB
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 from energy_pipelines.utils.logging_config import setup_logging
@@ -16,6 +17,7 @@ class Base(DeclarativeBase):
 class SchemaNames(StrEnum):
     ENERGY_PRICES = "energy_prices"
     SITES = "sites"
+    ALGOS = "algos"
 
 
 class Regions(Base):
@@ -88,6 +90,15 @@ class PriceData(Base):
         )
 
 
+class Algo(Base):
+    __tablename__ = "algo"
+    __table_args__ = {"schema": SchemaNames.ALGOS}
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    name: Mapped[str] = mapped_column(String(50), nullable=False, unique=True)
+    notes: Mapped[str | None] = mapped_column(String(500), nullable=True)
+
+
 class Site(Base):
     __tablename__ = "site"
     __table_args__ = {"schema": SchemaNames.SITES}
@@ -114,6 +125,25 @@ class Site(Base):
             f"subdivision={self.subdivision!r}, "
             f"tz={self.tz!r}, "
         )
+
+
+class SiteAlgos(Base):
+    __tablename__ = "site_algos"
+    __table_args__ = {"schema": SchemaNames.SITES}
+
+    site_id: Mapped[int] = mapped_column(
+        BigInteger,
+        ForeignKey(Site.id, ondelete="CASCADE"),
+        primary_key=True,
+    )
+    algo_id: Mapped[int] = mapped_column(
+        BigInteger,
+        ForeignKey(Algo.id, ondelete="RESTRICT"),
+        primary_key=True,
+    )
+    params: Mapped[dict] = mapped_column(JSONB, nullable=True)
+    is_active: Mapped[bool] = mapped_column(BOOLEAN, nullable=False, default=True)
+    notes: Mapped[str | None] = mapped_column(String(500), nullable=True)
 
 
 class CoolingSpecs(Base):
