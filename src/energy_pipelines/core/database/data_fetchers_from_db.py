@@ -6,7 +6,14 @@ from numpy import select
 from sqlalchemy import select
 from sqlalchemy.orm import InstrumentedAttribute, Session
 
-from energy_pipelines.core.database.models import CoolingSpecs, PriceData, PriceMetadata, Site
+from energy_pipelines.core.database.models import (
+    Algo,
+    CoolingSpecs,
+    PriceData,
+    PriceMetadata,
+    Site,
+    SiteAlgos,
+)
 
 
 @dataclass
@@ -65,3 +72,11 @@ def fetch_data_id_by_bidding_zone(session: Session, bidding_zone: str) -> int:
     return session.scalars(
         select(PriceMetadata.price_metadata_id).where(PriceMetadata.bidding_zone == bidding_zone)
     ).one()
+
+
+def fetch_site_algos(session: Session, site_id: int) -> list[SiteAlgos]:
+    return list(session.scalars(select(SiteAlgos).where(SiteAlgos.site_id == site_id)).all())
+
+
+def fetch_algo_name(session: Session, algo_id: int) -> str:
+    return session.scalars(select(Algo.name).where(Algo.id == algo_id)).one()
