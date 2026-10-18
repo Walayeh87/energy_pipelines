@@ -1,6 +1,7 @@
 import logging
 
 from pandas import Timedelta
+from pydantic import ValidationError
 
 from energy_pipelines.core.algos.temp_schedule_creator import create_backup_temp_schedule
 from energy_pipelines.core.database.alog_params import (
@@ -71,7 +72,14 @@ def upsert_temp_schedule(site_names: list[str] | str = "all") -> None:
                 )
                 continue
 
-            algo_params = algo_model.model_validate(site_algo.params)
+            try:
+                algo_params = algo_model.model_validate(site_algo.params)
+            except ValidationError as e:
+                logger.warning(
+                    f"No temperature schedule will be created for site '{site_name}' with algo '{algo_name}'"
+                    f" since the params are invalid. Further information: {e}"
+                )
+                continue
 
             if not site_algo.is_active:
                 logger.warning(
