@@ -30,9 +30,4 @@ class AdvancedTempScheduleCreatorParams(BaseModel):
     freq: str
 
 
-ALGO_MODEL_MAPPER = {
-    # If you rename the algo names in the mapper, don't forget to rename the corresponding names
-    # in algos.algo table!
-    "temp_schedule_creator": TempScheduleCreatorParams,
-    "advanced_temp_schedule_creator": AdvancedTempScheduleCreatorParams,
-}
+ALGO_MODEL_MAPPER = {1: TempScheduleCreatorParams, 2: AdvancedTempScheduleCreatorParams}

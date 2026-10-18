@@ -10,7 +10,6 @@ from energy_pipelines.core.database.alog_params import (
 )
 from energy_pipelines.core.database.connection import create_db_engine, create_db_session
 from energy_pipelines.core.database.data_fetchers_from_db import (
-    fetch_algo_name,
     fetch_all_site_ids_in_cooling_specs,
     fetch_all_site_names,
     fetch_data_id_by_bidding_zone,
@@ -85,8 +84,7 @@ def upsert_temp_schedule(site_names: list[str] | str = "all") -> None:
         site_algos = fetch_site_algos(session=session, site_id=site.id)
 
         for site_algo in site_algos:
-            algo_name = fetch_algo_name(session=session, algo_id=site_algo.algo_id)
-            algo_model = ALGO_MODEL_MAPPER[algo_name]
+            algo_model = ALGO_MODEL_MAPPER[site_algo.algo_id]
             algo_params = algo_model.model_validate(site_algo.params)
 
             if not site_algo.is_active:
@@ -98,7 +96,7 @@ def upsert_temp_schedule(site_names: list[str] | str = "all") -> None:
                 if energy_prices_not_available or have_unknown_issues:
                     logger.warning(
                         f"Default temperature schedule of constant {algo_params.temps['default_temp']}"
-                        f" {algo_params.temp_unit} will be created for site '{site_name}', since there is"
+                        f" °C will be created for site '{site_name}', since there is"
                         f" no energy price available."
                     )
                     backup_temp_schedule = create_backup_temp_schedule(
