@@ -2,7 +2,6 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
 
-from numpy import select
 from sqlalchemy import select
 from sqlalchemy.orm import InstrumentedAttribute, Session
 
