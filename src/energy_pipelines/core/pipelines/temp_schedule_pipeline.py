@@ -53,46 +53,14 @@ def upsert_temp_schedule(site_names: list[str] | str = "all") -> None:
         logger.info(f"Start temperature schedule upsertion process for site '{site_name}'.")
 
         site = fetch_site(session=session, site_name=site_name)
-        site_ids_in_site_algos = fetch_all_site_ids_in_site_algos(session=session)
-        if site.id not in site_ids_in_site_algos:
-            logger.warning(
-                f"No temperature schedule will be created for site '{site_name}',"
-                f" since there is no corresponding site_id: {site.id} found in table"
-                f" '{SchemaNames.SITES}.{SiteAlgos.__tablename__}'."
-            )
-            continue
-
-        bidding_zones_in_price_metadata = fetch_bidding_zones_in_price_metadata(session=session)
-        if site.bidding_zone not in bidding_zones_in_price_metadata:
-            logger.warning(
-                f"No temperature schedule will be created for site '{site_name}',"
-                f" since there is no corresponding bidding_zone {site.bidding_zone} found in table"
-                f" '{SchemaNames.ENERGY_PRICES}.{PriceData.__tablename__}'."
-            )
-            continue
-
-        data_id = fetch_data_id_by_bidding_zone(session=session, bidding_zone=site.bidding_zone)
-
-        energy_price_fetching_result = fetch_dt_data(
-            session=session,
-            cols2fetch=[PriceData.timestamp, PriceData.energy_price],
-            data_id=data_id,
-            start=get_tomorrows_date(),
-            end=get_tomorrows_date() + Timedelta(days=1),
-        )
-
-        price_metadata = fetch_price_metadata(
-            session=session,
-            metadata_id=energy_price_fetching_result.data_id,
-        )
-
-        energy_price_processing_result = process_energy_price_data(
-            fetching_result=energy_price_fetching_result,
-            price_tz=price_metadata.tz,
-            price_freq=price_metadata.freq,
-        )
-
         site_algos = fetch_site_algos(session=session, site_id=site.id)  # A site could have multiple algos
+
+        if len(site_algos) == 0:
+            logger.warning(
+                f"No temperature schedule will be created for site '{site_name}', since there is no algos "
+                f"assigned to it."
+            )
+            continue
 
         for site_algo in site_algos:
             algo_name = fetch_algo_name(session=session, algo_id=site_algo.algo_id)
@@ -105,6 +73,45 @@ def upsert_temp_schedule(site_names: list[str] | str = "all") -> None:
                     f" since the algo is deactivated."
                 )
                 continue
+
+            site_ids_in_site_algos = fetch_all_site_ids_in_site_algos(session=session)
+            if site.id not in site_ids_in_site_algos:
+                logger.warning(
+                    f"No temperature schedule will be created for site '{site_name}',"
+                    f" since there is no corresponding site_id: {site.id} found in table"
+                    f" '{SchemaNames.SITES}.{SiteAlgos.__tablename__}'."
+                )
+                continue
+
+            bidding_zones_in_price_metadata = fetch_bidding_zones_in_price_metadata(session=session)
+            if site.bidding_zone not in bidding_zones_in_price_metadata:
+                logger.warning(
+                    f"No temperature schedule will be created for site '{site_name}',"
+                    f" since there is no corresponding bidding_zone {site.bidding_zone} found in table"
+                    f" '{SchemaNames.ENERGY_PRICES}.{PriceData.__tablename__}'."
+                )
+                continue
+
+            data_id = fetch_data_id_by_bidding_zone(session=session, bidding_zone=site.bidding_zone)
+
+            energy_price_fetching_result = fetch_dt_data(
+                session=session,
+                cols2fetch=[PriceData.timestamp, PriceData.energy_price],
+                data_id=data_id,
+                start=get_tomorrows_date(),
+                end=get_tomorrows_date() + Timedelta(days=1),
+            )
+
+            price_metadata = fetch_price_metadata(
+                session=session,
+                metadata_id=energy_price_fetching_result.data_id,
+            )
+
+            energy_price_processing_result = process_energy_price_data(
+                fetching_result=energy_price_fetching_result,
+                price_tz=price_metadata.tz,
+                price_freq=price_metadata.freq,
+            )
 
             energy_prices_not_available = energy_price_processing_result.processing_issue.EMPTY_DATA
             have_unknown_issues = energy_price_processing_result.processing_issue.UNKNOWN
@@ -124,12 +131,10 @@ def upsert_temp_schedule(site_names: list[str] | str = "all") -> None:
 
                 # handle the general case
             if algo_model == AdvancedTempScheduleCreatorParams:
-                pass  #
+                logger.warning("The advanced temperature schedule creator is not implemented yet!")
+                continue
             else:
-                logger.warning(
-                    f"The algo model: '{algo_model}' is not available."
-                    f" Available models: {ALGO_MODEL_MAPPER.keys()}"
-                )
+                logger.warning(f"The algo model: '{algo_model}' is not available.")
 
     logger.info("Temperature schedule upsertion process has been completed.")
 
