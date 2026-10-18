@@ -12,13 +12,14 @@ from energy_pipelines.core.database.connection import create_db_engine, create_d
 from energy_pipelines.core.database.data_fetchers_from_db import (
     fetch_all_site_ids_in_site_algos,
     fetch_all_site_names,
+    fetch_bidding_zones_in_price_metadata,
     fetch_data_id_by_bidding_zone,
     fetch_dt_data,
     fetch_price_metadata,
     fetch_site,
     fetch_site_algos,
 )
-from energy_pipelines.core.database.models import PriceData, SchemaNames, Site, SiteAlgos
+from energy_pipelines.core.database.models import PriceData, PriceMetadata, SchemaNames, Site, SiteAlgos
 from energy_pipelines.core.processing.energy_price_processing import process_energy_price_data
 from energy_pipelines.utils.logging_config import setup_logging
 from energy_pipelines.utils.time_helpers import get_tomorrows_date
@@ -57,6 +58,15 @@ def upsert_temp_schedule(site_names: list[str] | str = "all") -> None:
                 f"No temperature schedule will be created for site '{site_name}',"
                 f" since there is no corresponding site_id {site.id} found in table"
                 f" '{SchemaNames.SITES}.{SiteAlgos.__tablename__}'."
+            )
+            continue
+
+        bidding_zones_in_price_metadata = fetch_bidding_zones_in_price_metadata(session=session)
+        if site.bidding_zone not in bidding_zones_in_price_metadata:
+            logger.warning(
+                f"No temperature schedule will be created for site '{site_name}',"
+                f" since there is no corresponding bidding_zone {site.bidding_zone} found in table"
+                f" '{SchemaNames.ENERGY_PRICES}.{PriceMetadata.__tablename__}'."
             )
             continue
 

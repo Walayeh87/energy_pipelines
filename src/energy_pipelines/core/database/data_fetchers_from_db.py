@@ -70,3 +70,7 @@ def fetch_data_id_by_bidding_zone(session: Session, bidding_zone: str) -> int:
 
 def fetch_site_algos(session: Session, site_id: int) -> list[SiteAlgos]:
     return list(session.scalars(select(SiteAlgos).where(SiteAlgos.site_id == site_id)).all())
+
+
+def fetch_bidding_zones_in_price_metadata(session: Session) -> list[str]:
+    return [price_metadata.bidding_zone for price_metadata in session.scalars(select(PriceMetadata)).all()]
