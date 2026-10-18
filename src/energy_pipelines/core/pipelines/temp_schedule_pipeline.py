@@ -4,11 +4,6 @@ from pandas import Timedelta
 from pydantic import ValidationError
 
 from energy_pipelines.core.algos.temp_schedule_creator import create_backup_temp_schedule
-from energy_pipelines.core.database.alog_params import (
-    ALGO_MODEL_MAPPER,
-    AdvancedTempScheduleCreatorParams,
-    TempScheduleCreatorParams,
-)
 from energy_pipelines.core.database.connection import create_db_engine, create_db_session
 from energy_pipelines.core.database.data_fetchers_from_db import (
     fetch_algo_name,
@@ -22,6 +17,11 @@ from energy_pipelines.core.database.data_fetchers_from_db import (
     fetch_site_algos,
 )
 from energy_pipelines.core.database.models import PriceData, SchemaNames, Site, SiteAlgos
+from energy_pipelines.core.database.param_models import (
+    ALGO_MODEL_MAPPER,
+    AdvancedTempScheduleCreatorParams,
+    TempScheduleCreatorParams,
+)
 from energy_pipelines.core.processing.energy_price_processing import process_energy_price_data
 from energy_pipelines.utils.logging_config import setup_logging
 from energy_pipelines.utils.time_helpers import get_tomorrows_date
