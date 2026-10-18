@@ -18,27 +18,68 @@ from energy_pipelines.utils.custom_errors import EmptyTableError
 
 @dataclass
 class DTFetchingResult:
-    data_id: int
+    price_metadata_id: int
     start: datetime
     end: datetime
-    dt_data: list[Any]
+    energy_price_data: list[Any]
 
 
-def fetch_dt_data(
+def fetch_energy_price_data(
     session: Session,
     cols2fetch: list[InstrumentedAttribute],
-    data_id: int,
+    price_metadata_id: int,
     start: datetime,
     end: datetime,
 ) -> DTFetchingResult:
+    if len(cols2fetch) == 0:
+        raise ValueError("No columns specified for fetching.")
+
+    for col2fetch in cols2fetch:
+        if col2fetch not in [getattr(PriceData, column.name) for column in PriceData.__table__.columns]:
+            raise ValueError(f"Column '{col2fetch.key}' is not a valid column for fetching.")
+
+    price_metadata_ids = set(session.scalars(select(PriceData.price_metadata_id)).all())
+    if price_metadata_id not in price_metadata_ids:
+        raise ValueError(
+            f"price_metadata_id: {price_metadata_id} not found in"
+            f" '{SchemaNames.ENERGY_PRICES}.{PriceData.__tablename__}'."
+        )
+
+    first_timestamp = session.scalars(
+        select(PriceData.timestamp)
+        .where(PriceData.price_metadata_id == price_metadata_id)
+        .order_by(PriceData.timestamp)
+    ).first()
+
+    if start >= end:
+        raise ValueError("Start time must be before end time.")
+
+    if start < first_timestamp:
+        raise ValueError(
+            f"start time '{start}' is before the first available timestamp '{first_timestamp}' "
+            f"in '{SchemaNames.ENERGY_PRICES}.{PriceData.__tablename__}'."
+        )
+
+    last_timestamp = session.scalars(
+        select(PriceData.timestamp)
+        .where(PriceData.price_metadata_id == price_metadata_id)
+        .order_by(PriceData.timestamp.desc())
+    ).first()
+
+    if end > last_timestamp:
+        raise ValueError(
+            f"end time '{end}' is after the last available timestamp '{last_timestamp}' "
+            f"in '{SchemaNames.ENERGY_PRICES}.{PriceData.__tablename__}'."
+        )
+
     data = (
         session.query(*cols2fetch)
-        .filter(PriceData.price_metadata_id == data_id)
+        .filter(PriceData.price_metadata_id == price_metadata_id)
         .filter(PriceData.timestamp >= start)
         .filter(PriceData.timestamp < end)
         .all()
     )
-    return DTFetchingResult(dt_data=data, data_id=data_id, start=start, end=end)
+    return DTFetchingResult(energy_price_data=data, price_metadata_id=price_metadata_id, start=start, end=end)
 
 
 def fetch_price_metadata(session: Session, metadata_id: int) -> PriceMetadata:

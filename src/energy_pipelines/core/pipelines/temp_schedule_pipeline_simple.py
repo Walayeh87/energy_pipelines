@@ -9,7 +9,7 @@ from energy_pipelines.core.database.data_fetchers_from_db import (
     fetch_algo_name,
     fetch_all_site_names,
     fetch_data_id_by_bidding_zone,
-    fetch_dt_data,
+    fetch_energy_price_data,
     fetch_price_metadata,
     fetch_site,
     fetch_site_algos,
@@ -88,17 +88,17 @@ def _run_site_pipeline(session: Session, site_name: str):
 
         data_id = fetch_data_id_by_bidding_zone(session=session, bidding_zone=site.bidding_zone)
 
-        energy_price_fetching_result = fetch_dt_data(
+        energy_price_fetching_result = fetch_energy_price_data(
             session=session,
             cols2fetch=[PriceData.timestamp, PriceData.energy_price],
-            data_id=data_id,
+            price_metadata_id=data_id,
             start=get_tomorrows_date(),
             end=get_tomorrows_date() + Timedelta(days=1),
         )
 
         price_metadata = fetch_price_metadata(
             session=session,
-            metadata_id=energy_price_fetching_result.data_id,
+            metadata_id=energy_price_fetching_result.price_metadata_id,
         )
 
         energy_price_processing_result = process_energy_price_data(

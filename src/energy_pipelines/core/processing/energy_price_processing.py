@@ -1,6 +1,6 @@
 import logging
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import StrEnum
 
 import pandas as pd
@@ -16,7 +16,7 @@ from tspropy import (
 from energy_pipelines.core.database.connection import create_db_engine, create_db_session
 from energy_pipelines.core.database.data_fetchers_from_db import (
     DTFetchingResult,
-    fetch_dt_data,
+    fetch_energy_price_data,
 )
 from energy_pipelines.core.database.models import PriceData, PriceMetadata, SchemaNames
 
@@ -46,12 +46,12 @@ def process_energy_price_data(
     price_tz: str,
     price_freq: str,
 ) -> EnergyPriceProcessingResult:
-    prices_as_list = fetching_result.dt_data
+    prices_as_list = fetching_result.energy_price_data
     if len(prices_as_list) == 0:
         logger.warning(
             f"No price data found for the specified period:"
             f" {fetching_result.start} to {fetching_result.end}"
-            f" for {PriceMetadata.price_metadata_id.key} {fetching_result.data_id} in "
+            f" for {PriceMetadata.price_metadata_id.key} {fetching_result.price_metadata_id} in "
             f"{SchemaNames.ENERGY_PRICES}.{PriceMetadata.__tablename__}"
         )
         return EnergyPriceProcessingResult(
@@ -171,12 +171,12 @@ if __name__ == "__main__":
     db_engine = create_db_engine()
     session = create_db_session(db_engine)
 
-    start_date = datetime(2026, 10, 1)
-    end_date = datetime(2026, 10, 2)
-    fetching_result = fetch_dt_data(
+    start_date = datetime(2026, 10, 15, tzinfo=timezone.utc)
+    end_date = datetime(2026, 10, 2, tzinfo=timezone.utc)
+    fetching_result = fetch_energy_price_data(
         session=session,
         cols2fetch=[PriceData.timestamp, PriceData.energy_price],
-        data_id=1,
+        price_metadata_id=1,
         start=start_date,
         end=end_date,
     )
