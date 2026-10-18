@@ -1,7 +1,7 @@
 from datetime import datetime
 from enum import StrEnum
 
-from sqlalchemy import BOOLEAN, DOUBLE_PRECISION, BigInteger, DateTime, ForeignKey, Numeric, String, Text
+from sqlalchemy import BOOLEAN, BigInteger, DateTime, ForeignKey, Numeric, String, Text
 from sqlalchemy.dialects.sqlite import JSONB
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
@@ -161,27 +161,4 @@ class SiteAlgos(Base):
             f"params={self.params!r}, "
             f"is_active={self.is_active!r}, "
             f"notes={self.notes!r})"
-        )
-
-
-class CoolingSpecs(Base):
-    __tablename__ = "cooling_specs"
-    __table_args__ = {"schema": SchemaNames.SITES}
-
-    site_id: Mapped[int] = mapped_column(
-        BigInteger, ForeignKey(Site.id, ondelete="CASCADE"), primary_key=True
-    )
-    min_temp: Mapped[int | float] = mapped_column(DOUBLE_PRECISION, nullable=False)
-    max_temp: Mapped[int | float] = mapped_column(DOUBLE_PRECISION, nullable=False)
-    default_temp: Mapped[int | float] = mapped_column(DOUBLE_PRECISION, nullable=False)
-    temp_unit: Mapped[str] = mapped_column(String(10), nullable=False)
-
-    def __repr__(self) -> str:
-        return (
-            f"{self.__table_args__['schema']}.{self.__tablename__}("
-            f"site_id={self.site_id!r}, "
-            f"min_temp={self.min_temp}, "
-            f"max_temp={self.max_temp}, "
-            f"default_temp={self.default_temp}, "
-            f"temp_unit={self.temp_unit!r})"
         )

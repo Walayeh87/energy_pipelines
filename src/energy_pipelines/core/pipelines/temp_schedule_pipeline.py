@@ -10,7 +10,7 @@ from energy_pipelines.core.database.alog_params import (
 )
 from energy_pipelines.core.database.connection import create_db_engine, create_db_session
 from energy_pipelines.core.database.data_fetchers_from_db import (
-    fetch_all_site_ids_in_cooling_specs,
+    fetch_all_site_ids_in_site_algos,
     fetch_all_site_names,
     fetch_data_id_by_bidding_zone,
     fetch_dt_data,
@@ -18,7 +18,7 @@ from energy_pipelines.core.database.data_fetchers_from_db import (
     fetch_site,
     fetch_site_algos,
 )
-from energy_pipelines.core.database.models import CoolingSpecs, PriceData, SchemaNames, Site
+from energy_pipelines.core.database.models import PriceData, SchemaNames, Site, SiteAlgos
 from energy_pipelines.core.processing.energy_price_processing import process_energy_price_data
 from energy_pipelines.utils.logging_config import setup_logging
 from energy_pipelines.utils.time_helpers import get_tomorrows_date
@@ -51,12 +51,12 @@ def upsert_temp_schedule(site_names: list[str] | str = "all") -> None:
         logger.info(f"Start temperature schedule upsertion process for site '{site_name}'.")
 
         site = fetch_site(session=session, site_name=site_name)
-        site_ids_in_cooling_specs = fetch_all_site_ids_in_cooling_specs(session=session)
-        if site.id not in site_ids_in_cooling_specs:
+        site_ids_in_site_algos = fetch_all_site_ids_in_site_algos(session=session)
+        if site.id not in site_ids_in_site_algos:
             logger.warning(
                 f"No temperature schedule will be created for site '{site_name}',"
                 f" since there is no corresponding site_id {site.id} found in table"
-                f" '{SchemaNames.SITES}.{CoolingSpecs.__tablename__}'."
+                f" '{SchemaNames.SITES}.{SiteAlgos.__tablename__}'."
             )
             continue
 
@@ -81,7 +81,7 @@ def upsert_temp_schedule(site_names: list[str] | str = "all") -> None:
             price_freq=price_metadata.freq,
         )
 
-        site_algos = fetch_site_algos(session=session, site_id=site.id)
+        site_algos = fetch_site_algos(session=session, site_id=site.id)  # A site could have multiple algos
 
         for site_algo in site_algos:
             algo_model = ALGO_MODEL_MAPPER[site_algo.algo_id]

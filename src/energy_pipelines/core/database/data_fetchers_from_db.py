@@ -7,7 +7,6 @@ from sqlalchemy import select
 from sqlalchemy.orm import InstrumentedAttribute, Session
 
 from energy_pipelines.core.database.models import (
-    CoolingSpecs,
     PriceData,
     PriceMetadata,
     Site,
@@ -48,16 +47,12 @@ def fetch_site(session: Session, site_name: str) -> Site:
     return session.scalars(select(Site).where(Site.name == site_name)).one()
 
 
-def fetch_cooling_specs(session: Session, site_id: int) -> CoolingSpecs:
-    return session.scalars(select(CoolingSpecs).where(CoolingSpecs.site_id == site_id)).one()
-
-
 def fetch_all_site_names(session: Session) -> list[str]:
     return [site.name for site in session.scalars(select(Site)).all()]
 
 
-def fetch_all_site_ids_in_cooling_specs(session: Session) -> list[int]:
-    return [site.site_id for site in session.scalars(select(CoolingSpecs)).all()]
+def fetch_all_site_ids_in_site_algos(session: Session) -> set[int]:
+    return set(site_algo.site_id for site_algo in session.scalars(select(SiteAlgos)).all())
 
 
 def fetch_bidding_zone_and_price_metadata_id_as_mapper(session: Session) -> dict[str, int]:
