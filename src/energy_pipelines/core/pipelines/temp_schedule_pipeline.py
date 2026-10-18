@@ -20,7 +20,7 @@ from energy_pipelines.core.database.data_fetchers_from_db import (
     fetch_site,
     fetch_site_algos,
 )
-from energy_pipelines.core.database.models import PriceData, PriceMetadata, SchemaNames, Site, SiteAlgos
+from energy_pipelines.core.database.models import PriceData, SchemaNames, Site, SiteAlgos
 from energy_pipelines.core.processing.energy_price_processing import process_energy_price_data
 from energy_pipelines.utils.logging_config import setup_logging
 from energy_pipelines.utils.time_helpers import get_tomorrows_date
@@ -57,7 +57,7 @@ def upsert_temp_schedule(site_names: list[str] | str = "all") -> None:
         if site.id not in site_ids_in_site_algos:
             logger.warning(
                 f"No temperature schedule will be created for site '{site_name}',"
-                f" since there is no corresponding site_id {site.id} found in table"
+                f" since there is no corresponding site_id: {site.id} found in table"
                 f" '{SchemaNames.SITES}.{SiteAlgos.__tablename__}'."
             )
             continue
@@ -67,7 +67,7 @@ def upsert_temp_schedule(site_names: list[str] | str = "all") -> None:
             logger.warning(
                 f"No temperature schedule will be created for site '{site_name}',"
                 f" since there is no corresponding bidding_zone {site.bidding_zone} found in table"
-                f" '{SchemaNames.ENERGY_PRICES}.{PriceMetadata.__tablename__}'."
+                f" '{SchemaNames.ENERGY_PRICES}.{PriceData.__tablename__}'."
             )
             continue
 
@@ -101,7 +101,7 @@ def upsert_temp_schedule(site_names: list[str] | str = "all") -> None:
 
             if not site_algo.is_active:
                 logger.warning(
-                    f"No temperature schedule will be created for site '{site_name}', algo '{algo_name}',"
+                    f"No temperature schedule will be created for site '{site_name}' with algo '{algo_name}',"
                     f" since the algo is deactivated."
                 )
                 continue
@@ -111,8 +111,8 @@ def upsert_temp_schedule(site_names: list[str] | str = "all") -> None:
             if algo_model == TempScheduleCreatorParams:
                 if energy_prices_not_available or have_unknown_issues:
                     logger.warning(
-                        f"Default temperature schedule of constant {algo_params.temps['default_temp']}"
-                        f" °C will be created for site '{site_name}', since there is"
+                        f"Default temperature schedule of constant: {algo_params.temps['default_temp']}"
+                        f" °C will be created for site '{site_name}' with algo '{algo_name}', since there is"
                         f" no energy price available."
                     )
                     backup_temp_schedule = create_backup_temp_schedule(
