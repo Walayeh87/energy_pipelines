@@ -16,3 +16,4 @@ psycopg
 pytz
 sqlalchemy
 uliweb-alembic
+pydantic
