@@ -64,7 +64,13 @@ def upsert_temp_schedule(site_names: list[str] | str = "all") -> None:
 
         for site_algo in site_algos:
             algo_name = fetch_algo_name(session=session, algo_id=site_algo.algo_id)
-            algo_model = ALGO_MODEL_MAPPER[site_algo.algo_id]
+            algo_model = ALGO_MODEL_MAPPER.get(site_algo.algo_id)
+            if algo_model is None:
+                logger.warning(
+                    f"There is no algo model for algo_id: {site_algo.algo_id} in ALGO_MODEL_MAPPER."
+                )
+                continue
+
             algo_params = algo_model.model_validate(site_algo.params)
 
             if not site_algo.is_active:
