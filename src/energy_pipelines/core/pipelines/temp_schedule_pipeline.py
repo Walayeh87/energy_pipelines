@@ -3,15 +3,21 @@ import logging
 from pandas import Timedelta
 
 from energy_pipelines.core.algos.temp_schedule_creator import create_backup_temp_schedule
+from energy_pipelines.core.database.alog_params import (
+    ALGO_MODEL_MAPPER,
+    AdvancedTempScheduleCreatorParams,
+    TempScheduleCreatorParams,
+)
 from energy_pipelines.core.database.connection import create_db_engine, create_db_session
 from energy_pipelines.core.database.data_fetchers_from_db import (
+    fetch_algo_name,
     fetch_all_site_ids_in_cooling_specs,
     fetch_all_site_names,
-    fetch_cooling_specs,
     fetch_data_id_by_bidding_zone,
     fetch_dt_data,
     fetch_price_metadata,
     fetch_site,
+    fetch_site_algos,
 )
 from energy_pipelines.core.database.models import CoolingSpecs, PriceData, SchemaNames, Site
 from energy_pipelines.core.processing.energy_price_processing import process_energy_price_data
@@ -46,8 +52,6 @@ def upsert_temp_schedule(site_names: list[str] | str = "all") -> None:
         logger.info(f"Start temperature schedule upsertion process for site '{site_name}'.")
 
         site = fetch_site(session=session, site_name=site_name)
-        cooling_specs = fetch_cooling_specs(session=session, site_id=site.id)
-
         site_ids_in_cooling_specs = fetch_all_site_ids_in_cooling_specs(session=session)
         if site.id not in site_ids_in_cooling_specs:
             logger.warning(
@@ -78,22 +82,40 @@ def upsert_temp_schedule(site_names: list[str] | str = "all") -> None:
             price_freq=price_metadata.freq,
         )
 
-        algo_freq = "15min"  # TODO: get it from DB
+        site_algos = fetch_site_algos(session=session, site_id=site.id)
 
-        energy_prices_not_available = energy_price_processing_result.processing_issue.EMPTY_DATA
-        have_unknown_issues = energy_price_processing_result.processing_issue.UNKNOWN
-        if energy_prices_not_available or have_unknown_issues:
-            logger.warning(
-                f"Default temperature schedule of constant {cooling_specs.default_temp}"
-                f" {cooling_specs.temp_unit} will be created for site '{site_name}', since there is"
-                f" no energy price available."
-            )
-            temp_schedule = create_backup_temp_schedule(
-                algo_freq=algo_freq,
-                default_temp=cooling_specs.default_temp,
-                tz=site.tz,
-            )
-            continue
+        for site_algo in site_algos:
+            algo_name = fetch_algo_name(session=session, algo_id=site_algo.algo_id)
+            algo_model = ALGO_MODEL_MAPPER[algo_name]
+            algo_params = algo_model.model_validate(site_algo.params)
+
+            if not site_algo.is_active:
+                continue
+
+            energy_prices_not_available = energy_price_processing_result.processing_issue.EMPTY_DATA
+            have_unknown_issues = energy_price_processing_result.processing_issue.UNKNOWN
+            if algo_model == TempScheduleCreatorParams:
+                if energy_prices_not_available or have_unknown_issues:
+                    logger.warning(
+                        f"Default temperature schedule of constant {algo_params.temps['default_temp']}"
+                        f" {algo_params.temp_unit} will be created for site '{site_name}', since there is"
+                        f" no energy price available."
+                    )
+                    backup_temp_schedule = create_backup_temp_schedule(
+                        algo_freq=algo_params.freq,
+                        default_temp=algo_params.temps["default_temp"],
+                        tz=site.tz,
+                    )
+                    continue
+
+                # handle the general case
+            if algo_model == AdvancedTempScheduleCreatorParams:
+                pass  #
+            else:
+                logger.warning(
+                    f"The algo model: '{algo_model}' is not available."
+                    f" Available models: {ALGO_MODEL_MAPPER.keys()}"
+                )
 
     logger.info("Temperature schedule upsertion process has been completed.")
 
