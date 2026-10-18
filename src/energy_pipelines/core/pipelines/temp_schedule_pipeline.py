@@ -129,7 +129,7 @@ def upsert_temp_schedule(site_names: list[str] | str = "all") -> None:
 
             energy_prices_not_available = energy_price_processing_result.processing_issue.EMPTY_DATA
             have_unknown_issues = energy_price_processing_result.processing_issue.UNKNOWN
-            if algo_model == TempScheduleCreatorParams:
+            if (algo_model == TempScheduleCreatorParams) or (algo_model == AdvancedTempScheduleCreatorParams):
                 if energy_prices_not_available or have_unknown_issues:
                     logger.warning(
                         f"Default temperature schedule of constant: {algo_params.temps['default_temp']}"
@@ -143,6 +143,8 @@ def upsert_temp_schedule(site_names: list[str] | str = "all") -> None:
                     )
                     continue
 
+            if algo_model == TempScheduleCreatorParams:
+                pass
                 # handle the general case
             if algo_model == AdvancedTempScheduleCreatorParams:
                 logger.warning("The advanced temperature schedule creator is not implemented yet!")
