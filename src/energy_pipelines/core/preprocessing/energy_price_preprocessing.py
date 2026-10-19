@@ -4,7 +4,7 @@ from typing import Any
 import pandas as pd
 from pandas import DataFrame
 
-from energy_pipelines.core.config.energy_price_keys_in_api import EnergyChartsKeys
+from energy_pipelines.core.database.api_models import EnergyChartsKeys
 from energy_pipelines.core.database.models import PriceData
 
 logger = logging.getLogger(__name__)
