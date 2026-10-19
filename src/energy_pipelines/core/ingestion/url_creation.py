@@ -11,7 +11,7 @@ def create_url_for_tomorrows_energy_prices(bidding_zone: str) -> str:
         raise ValueError("bidding_zone must not be empty.")
 
     # url = f"{ENERGY_PRICE_URL}?bzn={bidding_zone}&start=2026-10-01"  # For testing purposes
-    url = f"{ENERGY_PRICE_URL}?bzn={bidding_zone}&start={get_tomorrows_date()}"
+    url = f"{ENERGY_PRICE_URL}?bzn={bidding_zone}&start={get_tomorrows_date(tz='UTC')}"
     logger.info(f"The energy-price-URL '{url}' has been created.")
 
     return url

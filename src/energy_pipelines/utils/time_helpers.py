@@ -4,9 +4,14 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 from energy_pipelines.utils.time_constant import TimeConstant
 
 
-def get_tomorrows_date(tz: ZoneInfo) -> datetime:
+def get_tomorrows_date(tz: str) -> datetime:
+    try:
+        ZoneInfo(tz)
+    except ZoneInfoNotFoundError as e:
+        raise ZoneInfoNotFoundError(f"Invalid timezone: {tz}") from e
+
     date = datetime.now().date() + timedelta(days=1)
-    return datetime(year=date.year, month=date.month, day=date.day, tzinfo=tz)
+    return datetime(year=date.year, month=date.month, day=date.day, tzinfo=ZoneInfo(tz))
 
 
 def get_tz_diff_in_h(

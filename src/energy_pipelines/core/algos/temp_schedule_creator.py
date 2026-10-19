@@ -11,8 +11,8 @@ def create_backup_temp_schedule(
     tz: str,
 ) -> DataFrame:
     index = pd.date_range(
-        start=get_tomorrows_date(),
-        end=get_tomorrows_date() + Timedelta(days=1) - Timedelta(algo_freq),
+        start=get_tomorrows_date(tz=tz),
+        end=get_tomorrows_date(tz=tz) + Timedelta(days=1) - Timedelta(algo_freq),
         freq=algo_freq,
         tz=tz,
     )
