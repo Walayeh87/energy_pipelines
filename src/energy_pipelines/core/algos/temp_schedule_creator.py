@@ -1,8 +1,36 @@
+import numpy as np
 import pandas as pd
-from pandas import Timedelta
-from pandas.core.frame import DataFrame
+from pandas import DataFrame, Timedelta
 
 from energy_pipelines.utils.time_helpers import get_tomorrows_date
+
+
+def create_temp_schedule(
+    prices: DataFrame,
+    min_temp: int | float,
+    max_temp: int | float,
+    default_temp: int | float,
+) -> DataFrame:
+    if min_temp > max_temp:
+        raise ValueError("min_temp must be <= max_temp.")
+
+    if prices.empty:
+        return DataFrame([default_temp], index=prices.index)
+
+    if not np.isfinite(prices.to_numpy(dtype=float)).all():
+        raise ValueError("Energy prices must be finite numeric values.")
+
+    min_price = prices.min().min()
+    max_price = prices.max().max()
+
+    if min_price == max_price:
+        return DataFrame([default_temp], index=prices.index)
+
+    normalized_prices = (prices - min_price) / (max_price - min_price)
+
+    temp_schedule = min_temp + normalized_prices * (max_temp - min_temp)
+
+    return temp_schedule
 
 
 def create_backup_temp_schedule(

@@ -7,7 +7,10 @@ from pandas import Series, Timedelta
 from pandas.core.frame import DataFrame
 from sqlalchemy.orm import Session
 
-from energy_pipelines.core.algos.temp_schedule_creator import create_backup_temp_schedule
+from energy_pipelines.core.algos.temp_schedule_creator import (
+    create_backup_temp_schedule,
+    create_temp_schedule,
+)
 from energy_pipelines.core.database.connection import create_db_engine, create_db_session
 from energy_pipelines.core.database.data_fetchers_from_db import (
     fetch_algo_name,
@@ -28,12 +31,35 @@ from energy_pipelines.core.processing.energy_price_processing import (
     ProcessingIssues,
     process_energy_price_data,
 )
-from energy_pipelines.utils.custom_errors import EmptyTableError
+from energy_pipelines.utils.custom_errors import EmptyTableError, TempSchedulePipelineError
 from energy_pipelines.utils.logging_config import setup_logging
 from energy_pipelines.utils.time_helpers import get_tomorrows_date, get_tz_diff_in_h
 
 setup_logging()
 logger = logging.getLogger(__name__)
+
+
+class SitePipelineStatus(StrEnum):
+    SUCCESS = "success"
+    FAILURE = "failure"
+    INACTIVED_ALGO = "inactive_algo"
+    NOT_IMPLEMENTED_ALGO = "not_implemented_algo"
+
+
+@dataclass
+class SitePipelineResult:
+    site_id: int
+    algo_id: int
+    status: SitePipelineStatus
+    temp_schedule: DataFrame | None = None
+    is_backup_schedule: bool | None = None
+
+    # The output of EnergyPriceProcessingResult
+    original_prices: DataFrame | None = None
+    processed_prices: DataFrame | None = None
+
+    mask_of_filled_values: Series | None = None
+    processing_issue: ProcessingIssues | None = None
 
 
 def upsert_temp_schedule(site_names: list[str] | str = "all") -> None:
@@ -81,28 +107,6 @@ def upsert_temp_schedule(site_names: list[str] | str = "all") -> None:
     logger.info("Temperature schedule process has been completed.")
 
     # return energy_price_processing_result
-
-
-class SitePipelineStatus(StrEnum):
-    SUCCESS = "success"
-    FAILURE = "failure"
-    INACTIVED_ALGO = "inactive_algo"
-
-
-@dataclass
-class SitePipelineResult:
-    site_id: int
-    algo_id: int
-    status: SitePipelineStatus
-    temp_schedule: DataFrame | None = None
-    is_backup_schedule: bool | None = None
-
-    # The output of EnergyPriceProcessingResult
-    original_prices: DataFrame | None = None
-    processed_prices: DataFrame | None = None
-
-    mask_of_filled_values: Series | None = None
-    processing_issue: ProcessingIssues | None = None
 
 
 def _run_site_pipeline(session: Session, site_name: str) -> SitePipelineResult:
@@ -186,13 +190,44 @@ def _run_site_pipeline(session: Session, site_name: str) -> SitePipelineResult:
                 )
 
         if algo_model == TempScheduleCreatorParams:
-            pass
-            # handle the general case
+            logger.info(f"Creating temperature schedule for site '{site.name}' with algo '{algo_name}'.")
+            temp_schedule = create_temp_schedule(
+                prices=energy_price_processing_result.processed_prices,
+                min_temp=algo_params.temps["min_temp"],
+                max_temp=algo_params.temps["max_temp"],
+                default_temp=algo_params.temps["default_temp"],
+            )
+
+            return SitePipelineResult(
+                site_id=site.id,
+                algo_id=site_algo.algo_id,
+                temp_schedule=temp_schedule,
+                status=SitePipelineStatus.SUCCESS,
+                is_backup_schedule=False,
+                original_prices=energy_price_processing_result.original_prices,
+                processed_prices=energy_price_processing_result.processed_prices,
+                mask_of_filled_values=energy_price_processing_result.mask_of_filled_values,
+                processing_issue=energy_price_processing_result.processing_issue,
+            )
+
         if algo_model == AdvancedTempScheduleCreatorParams:
             logger.warning("The advanced temperature schedule creator is not implemented yet!")
-            pass
+
+            return SitePipelineResult(
+                site_id=site.id,
+                algo_id=site_algo.algo_id,
+                status=SitePipelineStatus.NOT_IMPLEMENTED_ALGO,
+                temp_schedule=None,
+                is_backup_schedule=None,
+                original_prices=None,
+                processed_prices=None,
+                mask_of_filled_values=None,
+                processing_issue=None,
+            )
         else:
             logger.warning(f"The algo model: '{algo_model}' is not available.")
+
+    raise TempSchedulePipelineError("Could not run a pipeline due to unexpected error.")
 
 
 if __name__ == "__main__":
