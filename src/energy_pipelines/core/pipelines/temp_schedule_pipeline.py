@@ -1,7 +1,10 @@
 import logging
-from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
+from dataclasses import dataclass
+from enum import StrEnum
+from zoneinfo import ZoneInfoNotFoundError
 
-from pandas import Timedelta
+from pandas import Series, Timedelta
+from pandas.core.frame import DataFrame
 from sqlalchemy.orm import Session
 
 from energy_pipelines.core.algos.temp_schedule_creator import create_backup_temp_schedule
@@ -21,7 +24,10 @@ from energy_pipelines.core.database.param_models import (
     AdvancedTempScheduleCreatorParams,
     TempScheduleCreatorParams,
 )
-from energy_pipelines.core.processing.energy_price_processing import process_energy_price_data
+from energy_pipelines.core.processing.energy_price_processing import (
+    ProcessingIssues,
+    process_energy_price_data,
+)
 from energy_pipelines.utils.custom_errors import EmptyTableError
 from energy_pipelines.utils.logging_config import setup_logging
 from energy_pipelines.utils.time_helpers import get_tomorrows_date, get_tz_diff_in_h
@@ -77,7 +83,29 @@ def upsert_temp_schedule(site_names: list[str] | str = "all") -> None:
     # return energy_price_processing_result
 
 
-def _run_site_pipeline(session: Session, site_name: str):
+class SitePipelineStatus(StrEnum):
+    SUCCESS = "success"
+    FAILURE = "failure"
+    INACTIVED_ALGO = "inactive_algo"
+
+
+@dataclass
+class SitePipelineResult:
+    site_id: int
+    algo_id: int
+    status: SitePipelineStatus
+    temp_schedule: DataFrame | None = None
+    is_backup_schedule: bool | None = None
+
+    # The output of EnergyPriceProcessingResult
+    original_prices: DataFrame | None = None
+    processed_prices: DataFrame | None = None
+
+    mask_of_filled_values: Series | None = None
+    processing_issue: ProcessingIssues | None = None
+
+
+def _run_site_pipeline(session: Session, site_name: str) -> SitePipelineResult:
     site = fetch_site(session=session, site_name=site_name)
     site_algos = fetch_site_algos(session=session, site_id=site.id)  # A site could have multiple algos
 
@@ -91,7 +119,17 @@ def _run_site_pipeline(session: Session, site_name: str):
                 f"No temperature schedule will be created for site '{site.name}' with algo '{algo_name}',"
                 f" since the algo is deactivated."
             )
-            pass
+            return SitePipelineResult(
+                site_id=site.id,
+                algo_id=site_algo.algo_id,
+                status=SitePipelineStatus.INACTIVED_ALGO,
+                temp_schedule=None,
+                is_backup_schedule=None,
+                original_prices=None,
+                processed_prices=None,
+                mask_of_filled_values=None,
+                processing_issue=None,
+            )
 
         price_metadata_id = fetch_price_metadata_id_by_bidding_zone(
             session=session,
@@ -99,7 +137,7 @@ def _run_site_pipeline(session: Session, site_name: str):
         )
 
         tz_diff_in_h = get_tz_diff_in_h(target_tz=site.tz)
-        start = get_tomorrows_date(tz=ZoneInfo("UTC")) + Timedelta(hours=tz_diff_in_h)
+        start = get_tomorrows_date(tz="UTC") + Timedelta(hours=tz_diff_in_h)
         # We subtract the freq because we want the last timestamp to be exclusive
         end = start + Timedelta(days=1) - Timedelta(algo_params.freq)
         energy_price_fetching_result = fetch_energy_price_data(
@@ -135,7 +173,17 @@ def _run_site_pipeline(session: Session, site_name: str):
                     default_temp=algo_params.temps["default_temp"],
                     tz=site.tz,
                 )
-                pass
+                return SitePipelineResult(
+                    site_id=site.id,
+                    algo_id=site_algo.algo_id,
+                    temp_schedule=backup_temp_schedule,
+                    status=SitePipelineStatus.SUCCESS,
+                    is_backup_schedule=True,
+                    original_prices=energy_price_processing_result.original_prices,
+                    processed_prices=energy_price_processing_result.processed_prices,
+                    mask_of_filled_values=energy_price_processing_result.mask_of_filled_values,
+                    processing_issue=energy_price_processing_result.processing_issue,
+                )
 
         if algo_model == TempScheduleCreatorParams:
             pass
