@@ -1,4 +1,5 @@
 import logging
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from pandas import Timedelta
 from sqlalchemy.orm import Session
@@ -8,9 +9,9 @@ from energy_pipelines.core.database.connection import create_db_engine, create_d
 from energy_pipelines.core.database.data_fetchers_from_db import (
     fetch_algo_name,
     fetch_all_site_names,
-    fetch_data_id_by_bidding_zone,
     fetch_energy_price_data,
     fetch_price_metadata,
+    fetch_price_metadata_id_by_bidding_zone,
     fetch_site,
     fetch_site_algos,
 )
@@ -23,7 +24,7 @@ from energy_pipelines.core.database.param_models import (
 from energy_pipelines.core.processing.energy_price_processing import process_energy_price_data
 from energy_pipelines.utils.custom_errors import EmptyTableError
 from energy_pipelines.utils.logging_config import setup_logging
-from energy_pipelines.utils.time_helpers import get_tomorrows_date
+from energy_pipelines.utils.time_helpers import get_tomorrows_date, get_tz_diff_in_h
 
 setup_logging()
 logger = logging.getLogger(__name__)
@@ -53,6 +54,12 @@ def upsert_temp_schedule(site_names: list[str] | str = "all") -> None:
         except EmptyTableError as e:
             logger.exception(
                 f"EmptyTableError occurred while creating a schedule for site '{site_name}': {e}"
+            )
+            failed_sites.append(site_name)
+
+        except ZoneInfoNotFoundError as e:
+            logger.exception(
+                f"ZoneInfoNotFoundError occurred while creating a schedule for site '{site_name}': {e}"
             )
             failed_sites.append(site_name)
 
@@ -86,14 +93,21 @@ def _run_site_pipeline(session: Session, site_name: str):
             )
             pass
 
-        data_id = fetch_data_id_by_bidding_zone(session=session, bidding_zone=site.bidding_zone)
+        price_metadata_id = fetch_price_metadata_id_by_bidding_zone(
+            session=session,
+            bidding_zone=site.bidding_zone,
+        )
 
+        tz_diff_in_h = get_tz_diff_in_h(target_tz=site.tz)
+        start = get_tomorrows_date(tz=ZoneInfo("UTC")) + Timedelta(hours=tz_diff_in_h)
+        # We subtract the freq because we want the last timestamp to be exclusive
+        end = start + Timedelta(days=1) - Timedelta(algo_params.freq)
         energy_price_fetching_result = fetch_energy_price_data(
             session=session,
             cols2fetch=[PriceData.timestamp, PriceData.energy_price],
-            price_metadata_id=data_id,
-            start=get_tomorrows_date(),
-            end=get_tomorrows_date() + Timedelta(days=1),
+            price_metadata_id=price_metadata_id,
+            start=start,
+            end=end,
         )
 
         price_metadata = fetch_price_metadata(

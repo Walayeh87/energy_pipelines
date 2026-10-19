@@ -116,7 +116,7 @@ def fetch_algo_name(session: Session, algo_id: int) -> str:
     return session.scalars(select(Algo.name).where(Algo.id == algo_id)).one()
 
 
-def fetch_data_id_by_bidding_zone(session: Session, bidding_zone: str) -> int:
+def fetch_price_metadata_id_by_bidding_zone(session: Session, bidding_zone: str) -> int:
     if bidding_zone not in fetch_bidding_zones_in_price_metadata(session=session):
         raise ValueError(
             f"bidding_zone '{bidding_zone}' not found in"

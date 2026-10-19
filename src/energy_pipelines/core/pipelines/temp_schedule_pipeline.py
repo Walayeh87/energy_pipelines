@@ -10,9 +10,9 @@ from energy_pipelines.core.database.data_fetchers_from_db import (
     fetch_all_site_ids_in_site_algos,
     fetch_all_site_names,
     fetch_bidding_zones_in_price_metadata,
-    fetch_data_id_by_bidding_zone,
     fetch_energy_price_data,
     fetch_price_metadata,
+    fetch_price_metadata_id_by_bidding_zone,
     fetch_site,
     fetch_site_algos,
 )
@@ -106,7 +106,7 @@ def upsert_temp_schedule(site_names: list[str] | str = "all") -> None:
                 )
                 continue
 
-            data_id = fetch_data_id_by_bidding_zone(session=session, bidding_zone=site.bidding_zone)
+            data_id = fetch_price_metadata_id_by_bidding_zone(session=session, bidding_zone=site.bidding_zone)
 
             energy_price_fetching_result = fetch_energy_price_data(
                 session=session,
