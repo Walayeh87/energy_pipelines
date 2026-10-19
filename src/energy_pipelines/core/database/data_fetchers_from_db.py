@@ -83,7 +83,7 @@ def fetch_price_metadata(session: Session, metadata_id: int) -> PriceMetadata:
 
 
 def fetch_site(session: Session, site_name: str) -> Site:
-    if site_name not in fetch_all_site_names(session=session):
+    if site_name not in [site.name for site in session.scalars(select(Site)).all()]:
         raise ValueError(
             f"Site with name '{site_name}' not found in '{SchemaNames.SITES}.{Site.__tablename__}'."
         )
@@ -117,20 +117,20 @@ def fetch_price_metadata_id_by_bidding_zone(session: Session, bidding_zone: str)
     ).one()
 
 
-def fetch_all_site_names(session: Session) -> list[str]:
-    site_names = [site.name for site in session.scalars(select(Site)).all()]
-    if len(site_names) == 0:
-        raise EmptyTableError(f"'{SchemaNames.SITES}.{Site.__tablename__}' is empty.")
+def fetch_site_names_by_ids(session: Session, site_ids: list[int] | int) -> list[str]:
+    if isinstance(site_ids, int):
+        site_ids = [site_ids]
 
-    return site_names
+    sites = session.scalars(select(Site).where(Site.id.in_(site_ids))).all()
+    return [site.name for site in sites]
 
 
-def fetch_all_site_ids_in_site_algos(session: Session) -> set[int]:
+def fetch_all_site_ids_in_site_algos(session: Session) -> list[int]:
     site_ids = set(site_algo.site_id for site_algo in session.scalars(select(SiteAlgos)).all())
     if len(site_ids) == 0:
         raise EmptyTableError(f"'{SchemaNames.SITES}.{SiteAlgos.__tablename__}' is empty.")
 
-    return site_ids
+    return list(site_ids)
 
 
 def fetch_bidding_zone_and_price_metadata_id_as_mapper(session: Session) -> dict[str, int]:

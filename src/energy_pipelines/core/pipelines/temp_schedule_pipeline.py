@@ -1,6 +1,7 @@
 import logging
 from dataclasses import dataclass
 from enum import StrEnum
+from typing import Literal
 from zoneinfo import ZoneInfoNotFoundError
 
 from pandas import Series, Timedelta
@@ -14,18 +15,19 @@ from energy_pipelines.core.algos.temp_schedule_creator import (
 from energy_pipelines.core.database.connection import create_db_engine, create_db_session
 from energy_pipelines.core.database.data_fetchers_from_db import (
     fetch_algo_name,
-    fetch_all_site_names,
+    fetch_all_site_ids_in_site_algos,
     fetch_energy_price_data,
     fetch_price_metadata,
     fetch_price_metadata_id_by_bidding_zone,
     fetch_site,
     fetch_site_algos,
+    fetch_site_names_by_ids,
 )
 from energy_pipelines.core.database.param_models import (
     ALGO_MODEL_MAPPER,
     TempScheduleCreatorParams,
 )
-from energy_pipelines.core.database.table_models import PriceData
+from energy_pipelines.core.database.table_models import PriceData, SchemaNames, Site
 from energy_pipelines.core.processing.energy_price_processing import (
     ProcessingIssues,
     process_energy_price_data,
@@ -60,17 +62,38 @@ class SitePipelineResult:
     processing_issue: ProcessingIssues | None = None
 
 
-def upsert_temp_schedule(site_names: list[str] | str = "all") -> None:
+ALL_SITE_IDS = Literal["all_site_ids"]
+
+
+def upsert_temp_schedule(site_ids: list[int] | int | ALL_SITE_IDS = "all_site_ids") -> None:
     db_engine = create_db_engine()
     session = create_db_session(db_engine=db_engine)
 
-    all_site_names = fetch_all_site_names(session=session)
+    all_site_ids = fetch_all_site_ids_in_site_algos(session=session)
 
-    if isinstance(site_names, str) and site_names != "all":
-        site_names = [site_names]
+    if isinstance(site_ids, str) and site_ids != ALL_SITE_IDS.__args__[0]:
+        raise ValueError(f"Invalid site_ids provided: {site_ids}")
 
-    if isinstance(site_names, str) and site_names == "all":
-        site_names = all_site_names
+    if isinstance(site_ids, str) and site_ids == ALL_SITE_IDS.__args__[0]:
+        site_ids = all_site_ids
+
+    if isinstance(site_ids, int):
+        site_ids = [site_ids]
+
+    for site_id in site_ids:
+        if site_id not in all_site_ids:
+            logger.warning(
+                f"site_id: {site_id} not found in '{SchemaNames.SITES}.{Site.__tablename__}'."
+                f" No schedule will be created for this site."
+            )
+
+    site_names = fetch_site_names_by_ids(session=session, site_ids=site_ids)
+
+    if len(site_names) == 0:
+        logger.warning(
+            f"All provided site_ids: {site_ids} not found in '{SchemaNames.SITES}.{Site.__tablename__}'."
+        )
+        return
 
     failed_sites = []
     for site_name in site_names:
@@ -216,4 +239,4 @@ def _run_site_pipeline(session: Session, site_name: str) -> SitePipelineResult:
 
 
 if __name__ == "__main__":
-    result = upsert_temp_schedule("all")
+    result = upsert_temp_schedule("all_site_ids")
