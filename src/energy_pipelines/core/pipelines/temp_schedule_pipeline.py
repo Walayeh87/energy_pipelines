@@ -23,7 +23,6 @@ from energy_pipelines.core.database.data_fetchers_from_db import (
 )
 from energy_pipelines.core.database.param_models import (
     ALGO_MODEL_MAPPER,
-    AdvancedTempScheduleCreatorParams,
     TempScheduleCreatorParams,
 )
 from energy_pipelines.core.database.table_models import PriceData
@@ -43,7 +42,6 @@ class SitePipelineStatus(StrEnum):
     SUCCESS = "success"
     FAILURE = "failure"
     INACTIVED_ALGO = "inactive_algo"
-    NOT_IMPLEMENTED_ALGO = "not_implemented_algo"
 
 
 @dataclass
@@ -166,7 +164,7 @@ def _run_site_pipeline(session: Session, site_name: str) -> SitePipelineResult:
             energy_price_processing_result.processing_issue == ProcessingIssues.EMPTY_DATA
         )
         have_unknown_issues = energy_price_processing_result.processing_issue == ProcessingIssues.UNKNOWN
-        if (algo_model == TempScheduleCreatorParams) or (algo_model == AdvancedTempScheduleCreatorParams):
+        if algo_model == TempScheduleCreatorParams:
             if energy_prices_not_available or have_unknown_issues:
                 backup_temp_schedule = create_backup_temp_schedule(
                     algo_freq=algo_params.freq,
@@ -211,23 +209,6 @@ def _run_site_pipeline(session: Session, site_name: str) -> SitePipelineResult:
                 processing_issue=energy_price_processing_result.processing_issue,
             )
 
-        if algo_model == AdvancedTempScheduleCreatorParams:
-            logger.warning(
-                f"No temperature schedule will be created for site '{site.name}' with algo '{algo_name}',"
-                f" since the algo is not implemented yet."
-            )
-
-            return SitePipelineResult(
-                site_id=site.id,
-                algo_id=site_algo.algo_id,
-                status=SitePipelineStatus.NOT_IMPLEMENTED_ALGO,
-                temp_schedule=None,
-                is_backup_schedule=None,
-                original_prices=None,
-                processed_prices=None,
-                mask_of_filled_values=None,
-                processing_issue=None,
-            )
         else:
             logger.warning(f"The algo model: '{algo_model}' is not available.")
 
