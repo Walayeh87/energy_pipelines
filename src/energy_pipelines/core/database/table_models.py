@@ -90,23 +90,6 @@ class PriceData(Base):
         )
 
 
-class Algo(Base):
-    __tablename__ = "algo"
-    __table_args__ = {"schema": SchemaNames.ALGOS}
-
-    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
-    name: Mapped[str] = mapped_column(String(50), nullable=False, unique=True)
-    notes: Mapped[str | None] = mapped_column(String(500), nullable=True)
-
-    def __repr__(self) -> str:
-        return (
-            f"{self.__table_args__['schema']}.{self.__tablename__}("
-            f"id={self.id!r}, "
-            f"name={self.name!r}, "
-            f"notes={self.notes!r})"
-        )
-
-
 class Site(Base):
     __tablename__ = "site"
     __table_args__ = {"schema": SchemaNames.SITES}
@@ -132,6 +115,50 @@ class Site(Base):
             f"country={self.country!r}, "
             f"subdivision={self.subdivision!r}, "
             f"tz={self.tz!r}, "
+        )
+
+
+class Algo(Base):
+    __tablename__ = "algo"
+    __table_args__ = {"schema": SchemaNames.ALGOS}
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    name: Mapped[str] = mapped_column(String(50), nullable=False, unique=True)
+    notes: Mapped[str | None] = mapped_column(String(500), nullable=True)
+
+    def __repr__(self) -> str:
+        return (
+            f"{self.__table_args__['schema']}.{self.__tablename__}("
+            f"id={self.id!r}, "
+            f"name={self.name!r}, "
+            f"notes={self.notes!r})"
+        )
+
+
+class AlgosOutput(Base):
+    __tablename__ = "algos_output"
+    __table_args__ = {"schema": SchemaNames.ALGOS}
+
+    site_id: Mapped[int] = mapped_column(
+        BigInteger,
+        ForeignKey(Site.id, ondelete="CASCADE"),
+        primary_key=True,
+    )
+    algo_id: Mapped[int] = mapped_column(
+        BigInteger,
+        ForeignKey(Algo.id, ondelete="RESTRICT"),
+        primary_key=True,
+    )
+    timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    values: Mapped[int | float] = mapped_column(Numeric, nullable=False)
+
+    def __repr__(self) -> str:
+        return (
+            f"{self.__table_args__['schema']}.{self.__tablename__}("
+            f"site_id={self.site_id!r}, "
+            f"algo_id={self.algo_id!r}, "
+            f"timestamp={self.timestamp!r}, "
+            f"values={self.values!r})"
         )
 
 
