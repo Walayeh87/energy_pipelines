@@ -10,7 +10,7 @@ def get_tomorrows_date(tz: str) -> datetime:
     except ZoneInfoNotFoundError as e:
         raise ZoneInfoNotFoundError(f"Invalid timezone: {tz}") from e
 
-    date = datetime.now().date() + timedelta(days=1)
+    date = datetime.now(tz=ZoneInfo(tz)).date() + timedelta(days=1)
     return datetime(year=date.year, month=date.month, day=date.day, tzinfo=ZoneInfo(tz))
 
 
@@ -40,3 +40,6 @@ def get_tz_diff_in_h(
 
 if __name__ == "__main__":
     tz_diff = get_tz_diff_in_h("Europe/Berlin")
+    tomorrow = get_tomorrows_date("Europe/Berlin")
+    print(f"Time difference: {tz_diff} hours")
+    print(f"Tomorrow's date: {tomorrow}")
