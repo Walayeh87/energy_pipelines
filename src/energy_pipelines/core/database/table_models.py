@@ -5,10 +5,6 @@ from sqlalchemy import BOOLEAN, BigInteger, DateTime, ForeignKey, Numeric, Strin
 from sqlalchemy.dialects.sqlite import JSONB
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
-from energy_pipelines.utils.logging_config import setup_logging
-
-setup_logging()
-
 
 class Base(DeclarativeBase):
     pass
