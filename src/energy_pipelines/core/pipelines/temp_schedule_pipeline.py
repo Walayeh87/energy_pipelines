@@ -102,7 +102,7 @@ def upsert_temp_schedule(site_names: list[str] | str = "all") -> None:
             failed_sites.append(site_name)
 
     if failed_sites:
-        logger.warning(f"The following site(s) failed to create temperature schedules: {failed_sites}")
+        logger.warning(f"Failed to create temperature schedules for the site(s): {failed_sites}")
 
     logger.info("Temperature schedule process has been completed.")
 
@@ -167,15 +167,15 @@ def _run_site_pipeline(session: Session, site_name: str) -> SitePipelineResult:
         have_unknown_issues = energy_price_processing_result.processing_issue.UNKNOWN
         if (algo_model == TempScheduleCreatorParams) or (algo_model == AdvancedTempScheduleCreatorParams):
             if energy_prices_not_available or have_unknown_issues:
-                logger.warning(
-                    f"Default temperature schedule of constant: {algo_params.temps['default_temp']}"
-                    f" °C will be created for site '{site.name}' with algo '{algo_name}', since there is"
-                    f" no energy price available."
-                )
                 backup_temp_schedule = create_backup_temp_schedule(
                     algo_freq=algo_params.freq,
                     default_temp=algo_params.temps["default_temp"],
                     tz=site.tz,
+                )
+                logger.warning(
+                    f"Default temperature schedule of constant: {algo_params.temps['default_temp']}"
+                    f" °C is created for site '{site.name}' with algo '{algo_name}', since there is"
+                    f" no energy price available."
                 )
                 return SitePipelineResult(
                     site_id=site.id,
@@ -190,13 +190,13 @@ def _run_site_pipeline(session: Session, site_name: str) -> SitePipelineResult:
                 )
 
         if algo_model == TempScheduleCreatorParams:
-            logger.info(f"Creating temperature schedule for site '{site.name}' with algo '{algo_name}'.")
             temp_schedule = create_temp_schedule(
                 prices=energy_price_processing_result.processed_prices,
                 min_temp=algo_params.temps["min_temp"],
                 max_temp=algo_params.temps["max_temp"],
                 default_temp=algo_params.temps["default_temp"],
             )
+            logger.info(f"Temperature schedule for site '{site.name}' with algo '{algo_name}' is created.")
 
             return SitePipelineResult(
                 site_id=site.id,
@@ -211,7 +211,10 @@ def _run_site_pipeline(session: Session, site_name: str) -> SitePipelineResult:
             )
 
         if algo_model == AdvancedTempScheduleCreatorParams:
-            logger.warning("The advanced temperature schedule creator is not implemented yet!")
+            logger.warning(
+                f"No temperature schedule will be created for site '{site.name}' with algo '{algo_name}',"
+                f" since the algo is not implemented yet."
+            )
 
             return SitePipelineResult(
                 site_id=site.id,
@@ -227,7 +230,7 @@ def _run_site_pipeline(session: Session, site_name: str) -> SitePipelineResult:
         else:
             logger.warning(f"The algo model: '{algo_model}' is not available.")
 
-    raise TempSchedulePipelineError("Could not run a pipeline due to unexpected error.")
+    raise TempSchedulePipelineError("Could not run a pipeline due to an unexpected error.")
 
 
 if __name__ == "__main__":
