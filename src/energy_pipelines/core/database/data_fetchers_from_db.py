@@ -5,7 +5,7 @@ from typing import Any
 from sqlalchemy import select
 from sqlalchemy.orm import InstrumentedAttribute, Session
 
-from energy_pipelines.core.database.models import (
+from energy_pipelines.core.database.table_models import (
     Algo,
     PriceData,
     PriceMetadata,

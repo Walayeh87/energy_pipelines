@@ -21,12 +21,12 @@ from energy_pipelines.core.database.data_fetchers_from_db import (
     fetch_site,
     fetch_site_algos,
 )
-from energy_pipelines.core.database.models import PriceData
 from energy_pipelines.core.database.param_models import (
     ALGO_MODEL_MAPPER,
     AdvancedTempScheduleCreatorParams,
     TempScheduleCreatorParams,
 )
+from energy_pipelines.core.database.table_models import PriceData
 from energy_pipelines.core.processing.energy_price_processing import (
     ProcessingIssues,
     process_energy_price_data,

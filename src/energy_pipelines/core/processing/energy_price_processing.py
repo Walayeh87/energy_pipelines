@@ -18,7 +18,7 @@ from energy_pipelines.core.database.data_fetchers_from_db import (
     DTFetchingResult,
     fetch_energy_price_data,
 )
-from energy_pipelines.core.database.models import PriceData, PriceMetadata, SchemaNames
+from energy_pipelines.core.database.table_models import PriceData, PriceMetadata, SchemaNames
 
 logger = logging.getLogger(__name__)
 

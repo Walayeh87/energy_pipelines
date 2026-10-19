@@ -5,7 +5,7 @@ import pandas as pd
 from pandas import DataFrame
 
 from energy_pipelines.core.database.api_models import EnergyChartsKeys
-from energy_pipelines.core.database.models import PriceData
+from energy_pipelines.core.database.table_models import PriceData
 
 logger = logging.getLogger(__name__)
 
