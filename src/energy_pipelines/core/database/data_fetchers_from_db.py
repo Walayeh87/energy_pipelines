@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
 
+from pandas._libs.tslibs.offsets import Timedelta
 from sqlalchemy import select
 from sqlalchemy.orm import InstrumentedAttribute, Session
 
@@ -51,24 +52,12 @@ def fetch_energy_price_data(
         .order_by(PriceData.timestamp)
     ).first()
 
-    if start >= end:
+    if start >= end - Timedelta("15min"):
         raise ValueError("Start time must be before end time.")
 
     if start < first_timestamp:
         raise ValueError(
             f"start time '{start}' is before the first available timestamp '{first_timestamp}' "
-            f"in '{SchemaNames.ENERGY_PRICES}.{PriceData.__tablename__}'."
-        )
-
-    last_timestamp = session.scalars(
-        select(PriceData.timestamp)
-        .where(PriceData.price_metadata_id == price_metadata_id)
-        .order_by(PriceData.timestamp.desc())
-    ).first()
-
-    if end > last_timestamp:
-        raise ValueError(
-            f"end time '{end}' is after the last available timestamp '{last_timestamp}' "
             f"in '{SchemaNames.ENERGY_PRICES}.{PriceData.__tablename__}'."
         )
 
