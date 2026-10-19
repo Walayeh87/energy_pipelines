@@ -48,9 +48,10 @@ def process_energy_price_data(
 ) -> EnergyPriceProcessingResult:
     prices_as_list = fetching_result.energy_price_data
     if len(prices_as_list) == 0:
+        open_end = fetching_result.end - Timedelta(price_freq)
         logger.warning(
             f"No price data found for the specified period:"
-            f" {fetching_result.start} to {fetching_result.end}"
+            f" {fetching_result.start} to {open_end}"
             f" for {PriceMetadata.price_metadata_id.key} {fetching_result.price_metadata_id} in "
             f"{SchemaNames.ENERGY_PRICES}.{PriceMetadata.__tablename__}"
         )
