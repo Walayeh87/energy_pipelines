@@ -7,7 +7,7 @@ from energy_pipelines.core.database.data_fetchers_from_db import (
 from energy_pipelines.core.database.data_upsertion import upsert_energy_prices_to_db
 from energy_pipelines.core.ingestion.api_fetcher import fetch_data_from_api
 from energy_pipelines.core.ingestion.url_creation import create_url_for_tomorrows_energy_prices
-from energy_pipelines.core.preprocessing.energy_price_preprocessing import preprocess_energy_price
+from energy_pipelines.core.preprocessing.energy_price_preprocessing import preprocess_price_data
 from energy_pipelines.utils.logging_config import setup_logging
 
 setup_logging()
@@ -25,7 +25,7 @@ def upsert_daily_energy_price(update_on_conflict: bool = False) -> None:
 
         prices_url = create_url_for_tomorrows_energy_prices(bidding_zone=bidding_zone)
         prices_as_dict = fetch_data_from_api(url=prices_url)
-        prices_as_df = preprocess_energy_price(
+        prices_as_df = preprocess_price_data(
             prices_as_dict=prices_as_dict, price_metadata_id=price_metadata_id
         )
         upsert_energy_prices_to_db(

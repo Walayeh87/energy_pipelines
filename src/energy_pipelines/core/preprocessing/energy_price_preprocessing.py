@@ -10,7 +10,7 @@ from energy_pipelines.core.database.table_models import PriceData
 logger = logging.getLogger(__name__)
 
 
-def preprocess_energy_price(
+def preprocess_price_data(
     prices_as_dict: dict[str, Any],
     price_metadata_id: int,
 ) -> DataFrame:
