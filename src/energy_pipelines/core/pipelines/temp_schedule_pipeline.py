@@ -142,8 +142,7 @@ def _run_site_pipeline(session: Session, site_name: str) -> SitePipelineResult:
 
         tz_diff_in_h = get_tz_diff_in_h(target_tz=site.tz)
         start = get_tomorrows_date(tz="UTC") + Timedelta(hours=tz_diff_in_h)
-        # We subtract the freq because we want the last timestamp to be exclusive
-        end = start + Timedelta(days=1) - Timedelta(algo_params.freq)
+        end = start + Timedelta(days=1)
         energy_price_fetching_result = fetch_energy_price_data(
             session=session,
             cols2fetch=[PriceData.timestamp, PriceData.energy_price],
@@ -163,14 +162,16 @@ def _run_site_pipeline(session: Session, site_name: str) -> SitePipelineResult:
             price_freq=price_metadata.freq,
         )
 
-        energy_prices_not_available = energy_price_processing_result.processing_issue.EMPTY_DATA
-        have_unknown_issues = energy_price_processing_result.processing_issue.UNKNOWN
+        energy_prices_not_available = (
+            energy_price_processing_result.processing_issue == ProcessingIssues.EMPTY_DATA
+        )
+        have_unknown_issues = energy_price_processing_result.processing_issue == ProcessingIssues.UNKNOWN
         if (algo_model == TempScheduleCreatorParams) or (algo_model == AdvancedTempScheduleCreatorParams):
             if energy_prices_not_available or have_unknown_issues:
                 backup_temp_schedule = create_backup_temp_schedule(
                     algo_freq=algo_params.freq,
                     default_temp=algo_params.temps["default_temp"],
-                    tz=site.tz,
+                    tz="UTC",
                 )
                 logger.warning(
                     f"Default temperature schedule of constant: {algo_params.temps['default_temp']}"
