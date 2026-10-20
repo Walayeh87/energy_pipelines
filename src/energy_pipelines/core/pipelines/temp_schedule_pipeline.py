@@ -23,6 +23,7 @@ from energy_pipelines.core.database.data_fetchers_from_db import (
     fetch_site_algos,
     fetch_site_names_by_ids,
 )
+from energy_pipelines.core.database.data_upsertion import upsert_valid_temp_schedule
 from energy_pipelines.core.database.param_models import (
     ALGO_MODEL_MAPPER,
     TempScheduleCreatorParams,
@@ -215,6 +216,7 @@ def _run_site_pipeline(session: Session, site_name: str) -> SitePipelineResult:
                     expected_length=expected_schedule_length,
                     default_temp=algo_params.temps["default_temp"],
                 )
+                upsert_valid_temp_schedule(session=session, temp_schedule=preprocessed_temp_schedule)
                 return SitePipelineResult(
                     site_id=site.id,
                     algo_id=site_algo.algo_id,
@@ -247,6 +249,7 @@ def _run_site_pipeline(session: Session, site_name: str) -> SitePipelineResult:
                 min_temp=algo_params.temps["min_temp"],
                 max_temp=algo_params.temps["max_temp"],
             )
+            upsert_valid_temp_schedule(session=session, temp_schedule=preprocessed_temp_schedule)
             return SitePipelineResult(
                 site_id=site.id,
                 algo_id=site_algo.algo_id,

@@ -6,7 +6,7 @@ from sqlalchemy import exists, select, tuple_
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session
 
-from energy_pipelines.core.database.table_models import PriceData
+from energy_pipelines.core.database.table_models import AlgosOutput, PriceData
 
 logger = logging.getLogger(__name__)
 
@@ -59,3 +59,14 @@ def _check_price_existence(
     stmt = select(exists().where(tuple_(PriceData.timestamp, PriceData.price_metadata_id).in_(keys)))
 
     return bool(session.scalar(stmt))
+
+
+def upsert_valid_temp_schedule(session: Session, temp_schedule: DataFrame) -> None:
+    stmt = insert(AlgosOutput).values(temp_schedule.to_dict(orient="records"))
+
+    try:
+        session.execute(stmt)
+        session.commit()
+    except Exception:
+        session.rollback()
+        raise
