@@ -26,7 +26,7 @@ def upsert_energy_prices_to_db(session: Session, prices: DataFrame, update_on_co
     if update_on_conflict:
         stmt = stmt.on_conflict_do_update(
             index_elements=[PriceData.timestamp, PriceData.price_metadata_id],
-            set_={"energy_price": stmt.excluded.energy_price},
+            set_={PriceData.energy_price.key: stmt.excluded.energy_price},
         )
 
         if price_exists:
@@ -38,14 +38,18 @@ def upsert_energy_prices_to_db(session: Session, prices: DataFrame, update_on_co
 
         if price_exists:
             logger.info(
-                "No data has been upserted to the DB since they are already exist. If you want to update them,"
-                " set the parameter 'update_on_conflict' to True."
+                "No data has been upserted to the DB since they are already exist."
+                " If you want to update them, set the parameter 'update_on_conflict' to True."
             )
         else:
             logger.info(f"{len(prices)} energy prices have been upserted into the database successfully.")
 
-    session.execute(stmt)
-    session.commit()
+    try:
+        session.execute(stmt)
+        session.commit()
+    except Exception:
+        session.rollback()
+        raise
 
 
 def _check_price_existence(
@@ -61,8 +65,54 @@ def _check_price_existence(
     return bool(session.scalar(stmt))
 
 
-def upsert_valid_temp_schedule(session: Session, temp_schedule: DataFrame) -> None:
+def upsert_valid_temp_schedule(
+    session: Session,
+    temp_schedule: DataFrame,
+    update_on_conflict: bool,
+) -> None:
     stmt = insert(AlgosOutput).values(temp_schedule.to_dict(orient="records"))
+
+    schedule_exists = _check_temp_schedule_existence(
+        session=session,
+        timestamps=temp_schedule[AlgosOutput.timestamp.key],
+        site_ids=temp_schedule[AlgosOutput.site_id.key],
+        algo_ids=temp_schedule[AlgosOutput.algo_id.key],
+    )
+
+    if schedule_exists:
+        logger.info("Some/all temperature schedule values already exist in the database.")
+
+    if update_on_conflict:
+        stmt = stmt.on_conflict_do_update(
+            index_elements=[AlgosOutput.timestamp, AlgosOutput.site_id, AlgosOutput.algo_id],
+            set_={AlgosOutput.values.key: stmt.excluded.values},
+        )
+
+        if schedule_exists:
+            logger.info(
+                f"{len(temp_schedule)} temperature schedule values have been updated in the database"
+                f" successfully."
+            )
+        else:
+            logger.info(
+                f"{len(temp_schedule)} temperature schedule values have been upserted into the database"
+                f" successfully."
+            )
+    else:
+        stmt = stmt.on_conflict_do_nothing(
+            index_elements=[AlgosOutput.timestamp, AlgosOutput.site_id, AlgosOutput.algo_id]
+        )
+
+        if schedule_exists:
+            logger.info(
+                "No data has been upserted to the DB since they are already exist."
+                " If you want to update them, set the parameter 'update_on_conflict' to True."
+            )
+        else:
+            logger.info(
+                f"{len(temp_schedule)} temperature schedule values have been upserted into the database"
+                f" successfully."
+            )
 
     try:
         session.execute(stmt)
@@ -70,3 +120,18 @@ def upsert_valid_temp_schedule(session: Session, temp_schedule: DataFrame) -> No
     except Exception:
         session.rollback()
         raise
+
+
+def _check_temp_schedule_existence(
+    session: Session, timestamps: Series[datetime], site_ids: Series[int], algo_ids: Series[int]
+) -> bool:
+    keys = list(zip(timestamps.tolist(), site_ids.tolist(), algo_ids.to_list(), strict=True))
+
+    if not keys:
+        return False
+
+    stmt = select(
+        exists().where(tuple_(AlgosOutput.timestamp, AlgosOutput.site_id, AlgosOutput.algo_id).in_(keys))
+    )
+
+    return bool(session.scalar(stmt))

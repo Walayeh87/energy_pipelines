@@ -76,7 +76,10 @@ class SitePipelineResult:
 ALL_SITE_IDS = Literal["all_site_ids"]
 
 
-def upsert_temp_schedule(site_ids: list[int] | int | ALL_SITE_IDS = "all_site_ids") -> None:
+def upsert_temp_schedule(
+    site_ids: list[int] | int | ALL_SITE_IDS = "all_site_ids",
+    update_on_conflict: bool = False,
+) -> None:
     db_engine = create_db_engine()
     session = create_db_session(db_engine=db_engine)
 
@@ -110,7 +113,11 @@ def upsert_temp_schedule(site_ids: list[int] | int | ALL_SITE_IDS = "all_site_id
     for site_name in site_names:
         logger.info(f"Start temperature schedule upsertion process for site '{site_name}'.")
         try:
-            site_pipeline_result = _run_site_pipeline(session=session, site_name=site_name)
+            site_pipeline_result = _run_site_pipeline(
+                session=session,
+                site_name=site_name,
+                update_on_conflict=update_on_conflict,
+            )
         except ValueError as e:
             logger.exception(f"ValueError occurred while creating a schedule for site '{site_name}': {e}")
             failed_sites.append(site_name)
@@ -141,7 +148,7 @@ def upsert_temp_schedule(site_ids: list[int] | int | ALL_SITE_IDS = "all_site_id
     # return energy_price_processing_result
 
 
-def _run_site_pipeline(session: Session, site_name: str) -> SitePipelineResult:
+def _run_site_pipeline(session: Session, site_name: str, update_on_conflict: bool) -> SitePipelineResult:
     site = fetch_site(session=session, site_name=site_name)
     site_algos = fetch_site_algos(session=session, site_id=site.id)  # A site could have multiple algos
 
@@ -216,7 +223,11 @@ def _run_site_pipeline(session: Session, site_name: str) -> SitePipelineResult:
                     expected_length=expected_schedule_length,
                     default_temp=algo_params.temps["default_temp"],
                 )
-                upsert_valid_temp_schedule(session=session, temp_schedule=preprocessed_temp_schedule)
+                upsert_valid_temp_schedule(
+                    session=session,
+                    temp_schedule=preprocessed_temp_schedule,
+                    update_on_conflict=update_on_conflict,
+                )
                 return SitePipelineResult(
                     site_id=site.id,
                     algo_id=site_algo.algo_id,
@@ -249,7 +260,11 @@ def _run_site_pipeline(session: Session, site_name: str) -> SitePipelineResult:
                 min_temp=algo_params.temps["min_temp"],
                 max_temp=algo_params.temps["max_temp"],
             )
-            upsert_valid_temp_schedule(session=session, temp_schedule=preprocessed_temp_schedule)
+            upsert_valid_temp_schedule(
+                session=session,
+                temp_schedule=preprocessed_temp_schedule,
+                update_on_conflict=update_on_conflict,
+            )
             return SitePipelineResult(
                 site_id=site.id,
                 algo_id=site_algo.algo_id,
