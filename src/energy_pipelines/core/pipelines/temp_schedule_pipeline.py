@@ -28,6 +28,9 @@ from energy_pipelines.core.database.param_models import (
     TempScheduleCreatorParams,
 )
 from energy_pipelines.core.database.table_models import PriceData, SchemaNames, Site
+from energy_pipelines.core.preprocessing.temp_schedule_preprocessing import (
+    preprocess_temp_schedule,
+)
 from energy_pipelines.core.processing.energy_price_processing import (
     ProcessingIssues,
     process_energy_price_data,
@@ -199,6 +202,11 @@ def _run_site_pipeline(session: Session, site_name: str) -> SitePipelineResult:
                     f" °C is created for site '{site.name}' with algo '{algo_name}', since there is"
                     f" no energy price available."
                 )
+                preprocessed_temp_schedule = preprocess_temp_schedule(
+                    temp_schedule=backup_temp_schedule,
+                    site_id=site.id,
+                    algo_id=site_algo.algo_id,
+                )
                 return SitePipelineResult(
                     site_id=site.id,
                     algo_id=site_algo.algo_id,
@@ -219,7 +227,11 @@ def _run_site_pipeline(session: Session, site_name: str) -> SitePipelineResult:
                 default_temp=algo_params.temps["default_temp"],
             )
             logger.info(f"Temperature schedule for site '{site.name}' with algo '{algo_name}' is created.")
-
+            preprocessed_temp_schedule = preprocess_temp_schedule(
+                temp_schedule=temp_schedule,
+                site_id=site.id,
+                algo_id=site_algo.algo_id,
+            )
             return SitePipelineResult(
                 site_id=site.id,
                 algo_id=site_algo.algo_id,
