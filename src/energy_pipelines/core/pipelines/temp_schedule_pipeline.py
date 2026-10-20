@@ -35,8 +35,14 @@ from energy_pipelines.core.processing.energy_price_processing import (
     ProcessingIssues,
     process_energy_price_data,
 )
+from energy_pipelines.core.validation.temp_schedule_validator import (
+    TempScheduleValidationResult,
+    validate_backup_temp_schedule,
+    validate_temp_schedule,
+)
 from energy_pipelines.utils.custom_errors import EmptyTableError, TempSchedulePipelineError
 from energy_pipelines.utils.logging_config import setup_logging
+from energy_pipelines.utils.time_constant import TimeConstant
 from energy_pipelines.utils.time_helpers import get_tomorrows_date, get_tz_diff_in_h
 
 setup_logging()
@@ -54,6 +60,7 @@ class SitePipelineResult:
     site_id: int
     algo_id: int
     status: SitePipelineStatus
+    schedule_validation_result: TempScheduleValidationResult | None = None
     temp_schedule: DataFrame | None = None
     is_backup_schedule: bool | None = None
 
@@ -151,12 +158,6 @@ def _run_site_pipeline(session: Session, site_name: str) -> SitePipelineResult:
                 site_id=site.id,
                 algo_id=site_algo.algo_id,
                 status=SitePipelineStatus.INACTIVED_ALGO,
-                temp_schedule=None,
-                is_backup_schedule=None,
-                original_prices=None,
-                processed_prices=None,
-                mask_of_filled_values=None,
-                processing_issue=None,
             )
 
         price_metadata_id = fetch_price_metadata_id_by_bidding_zone(
@@ -186,6 +187,8 @@ def _run_site_pipeline(session: Session, site_name: str) -> SitePipelineResult:
             price_freq=price_metadata.freq,
         )
 
+        expected_schedule_length = int(TimeConstant.SEC_IN_DAY / Timedelta(algo_params.freq).total_seconds())
+
         energy_prices_not_available = (
             energy_price_processing_result.processing_issue == ProcessingIssues.EMPTY_DATA
         )
@@ -207,10 +210,16 @@ def _run_site_pipeline(session: Session, site_name: str) -> SitePipelineResult:
                     site_id=site.id,
                     algo_id=site_algo.algo_id,
                 )
+                validation_result = validate_backup_temp_schedule(
+                    temp_schedule=preprocessed_temp_schedule,
+                    expected_length=expected_schedule_length,
+                    default_temp=algo_params.temps["default_temp"],
+                )
                 return SitePipelineResult(
                     site_id=site.id,
                     algo_id=site_algo.algo_id,
-                    temp_schedule=backup_temp_schedule,
+                    temp_schedule=preprocessed_temp_schedule,
+                    schedule_validation_result=validation_result,
                     status=SitePipelineStatus.SUCCESS,
                     is_backup_schedule=True,
                     original_prices=energy_price_processing_result.original_prices,
@@ -232,10 +241,17 @@ def _run_site_pipeline(session: Session, site_name: str) -> SitePipelineResult:
                 site_id=site.id,
                 algo_id=site_algo.algo_id,
             )
+            validation_result = validate_temp_schedule(
+                temp_schedule=preprocessed_temp_schedule,
+                expected_length=expected_schedule_length,
+                min_temp=algo_params.temps["min_temp"],
+                max_temp=algo_params.temps["max_temp"],
+            )
             return SitePipelineResult(
                 site_id=site.id,
                 algo_id=site_algo.algo_id,
                 temp_schedule=temp_schedule,
+                schedule_validation_result=validation_result,
                 status=SitePipelineStatus.SUCCESS,
                 is_backup_schedule=False,
                 original_prices=energy_price_processing_result.original_prices,
