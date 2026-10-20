@@ -118,19 +118,10 @@ def temp_schedule_pipeline(
                 site_name=site_name,
                 update_on_conflict=update_on_conflict,
             )
-        except ValueError as e:
-            logger.exception(f"ValueError occurred while creating a schedule for site '{site_name}': {e}")
-            failed_sites.append(site_name)
 
-        except EmptyTableError as e:
+        except (ValueError, EmptyTableError, ZoneInfoNotFoundError) as e:
             logger.exception(
-                f"EmptyTableError occurred while creating a schedule for site '{site_name}': {e}"
-            )
-            failed_sites.append(site_name)
-
-        except ZoneInfoNotFoundError as e:
-            logger.exception(
-                f"ZoneInfoNotFoundError occurred while creating a schedule for site '{site_name}': {e}"
+                f"{type(e).__name__} occurred while creating a schedule for site '{site_name}': {e}"
             )
             failed_sites.append(site_name)
 
