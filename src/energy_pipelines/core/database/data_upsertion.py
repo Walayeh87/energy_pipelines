@@ -11,7 +11,7 @@ from energy_pipelines.core.database.table_models import AlgosOutput, PriceData
 logger = logging.getLogger(__name__)
 
 
-def upsert_energy_prices_to_db(session: Session, prices: DataFrame, update_on_conflict: bool) -> None:
+def upsert_energy_prices(session: Session, prices: DataFrame, update_on_conflict: bool) -> None:
     stmt = insert(PriceData).values(prices.to_dict(orient="records"))
 
     price_exists = _check_price_existence(

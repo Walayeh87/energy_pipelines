@@ -76,7 +76,7 @@ class SitePipelineResult:
 ALL_SITE_IDS = Literal["all_site_ids"]
 
 
-def upsert_temp_schedule(
+def temp_schedule_pipeline(
     site_ids: list[int] | int | ALL_SITE_IDS = "all_site_ids",
     update_on_conflict: bool = False,
 ) -> None:
@@ -285,4 +285,4 @@ def _run_site_pipeline(session: Session, site_name: str, update_on_conflict: boo
 
 
 if __name__ == "__main__":
-    result = upsert_temp_schedule("all_site_ids")
+    result = temp_schedule_pipeline("all_site_ids")
