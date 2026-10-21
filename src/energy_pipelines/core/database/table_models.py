@@ -145,7 +145,7 @@ class AlgosOutput(Base):
         ForeignKey(Algo.id, ondelete="RESTRICT"),
         primary_key=True,
     )
-    timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, primary_key=True)
     values: Mapped[int | float] = mapped_column(Numeric, nullable=False)
 
     def __repr__(self) -> str:
@@ -184,4 +184,41 @@ class SiteAlgos(Base):
             f"params={self.params!r}, "
             f"is_active={self.is_active!r}, "
             f"notes={self.notes!r})"
+        )
+
+
+class FailingAlgosOutput(Base):
+    __tablename__ = "failing_algos_output"
+    __table_args__ = {"schema": SchemaNames.ALGOS}
+
+    site_id: Mapped[int] = mapped_column(
+        BigInteger,
+        ForeignKey(Site.id, ondelete="NO ACTION"),
+        primary_key=True,
+    )
+    algo_id: Mapped[int] = mapped_column(
+        BigInteger,
+        ForeignKey(Algo.id, ondelete="NO ACTION"),
+        primary_key=True,
+    )
+    timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, primary_key=True)
+    values: Mapped[int | float] = mapped_column(Numeric, nullable=True)
+    failing_reason: Mapped[str] = mapped_column(String(50), nullable=False)
+    reporting_time: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    processed_prices: Mapped[int | float | None] = mapped_column(Numeric, nullable=True)
+    mask_of_filled_values: Mapped[bool] = mapped_column(BOOLEAN, nullable=False)
+    price_processing_issue: Mapped[str] = mapped_column(String(50), nullable=False)
+
+    def __repr__(self) -> str:
+        return (
+            f"{self.__table_args__['schema']}.{self.__tablename__}("
+            f"site_id={self.site_id!r}, "
+            f"algo_id={self.algo_id!r}, "
+            f"timestamp={self.timestamp!r}, "
+            f"values={self.values!r}, "
+            f"failing_reason={self.failing_reason!r}, "
+            f"reporting_time={self.reporting_time!r}, "
+            f"processed_prices={self.processed_prices!r}, "
+            f"mask_of_filled_values={self.mask_of_filled_values!r}, "
+            f"price_processing_issue={self.price_processing_issue!r})"
         )
