@@ -1,11 +1,8 @@
 import logging
-from dataclasses import dataclass
-from enum import StrEnum
 from typing import Literal
 from zoneinfo import ZoneInfoNotFoundError
 
-from pandas import Series, Timedelta
-from pandas.core.frame import DataFrame
+from pandas import Timedelta
 from sqlalchemy.orm import Session
 
 from energy_pipelines.core.algos.temp_schedule_creator import (
@@ -28,49 +25,26 @@ from energy_pipelines.core.database.param_models import (
     ALGO_MODEL_MAPPER,
     TempScheduleCreatorParams,
 )
-from energy_pipelines.core.database.table_models import PriceData, SchemaNames, Site
+from energy_pipelines.core.database.table_models import PriceData, SchemaNames, Site, SiteAlgos
 from energy_pipelines.core.preprocessing.temp_schedule_preprocessing import (
     preprocess_temp_schedule,
 )
 from energy_pipelines.core.processing.energy_price_processing import (
+    EnergyPriceProcessingResult,
     ProcessingIssues,
     process_energy_price_data,
 )
 from energy_pipelines.core.validation.temp_schedule_validator import (
-    TempScheduleValidationResult,
     validate_backup_temp_schedule,
     validate_temp_schedule,
 )
-from energy_pipelines.utils.custom_errors import EmptyTableError, TempSchedulePipelineError
+from energy_pipelines.utils.custom_errors import EmptyTableError
 from energy_pipelines.utils.logging_config import setup_logging
 from energy_pipelines.utils.time_constant import TimeConstant
 from energy_pipelines.utils.time_helpers import get_tomorrows_date, get_tz_diff_in_h
 
 setup_logging()
 logger = logging.getLogger(__name__)
-
-
-class SitePipelineStatus(StrEnum):
-    SUCCESS = "success"
-    FAILURE = "failure"
-    INACTIVED_ALGO = "inactive_algo"
-
-
-@dataclass
-class SitePipelineResult:
-    site_id: int
-    algo_id: int
-    status: SitePipelineStatus
-    schedule_validation_result: TempScheduleValidationResult | None = None
-    temp_schedule: DataFrame | None = None
-    is_backup_schedule: bool | None = None
-
-    # The output of EnergyPriceProcessingResult
-    original_prices: DataFrame | None = None
-    processed_prices: DataFrame | None = None
-
-    mask_of_filled_values: Series | None = None
-    processing_issue: ProcessingIssues | None = None
 
 
 ALL_SITE_IDS = Literal["all_site_ids"]
@@ -113,11 +87,7 @@ def temp_schedule_pipeline(
     for site_name in site_names:
         logger.info(f"Start temperature schedule upsertion process for site '{site_name}'.")
         try:
-            site_pipeline_result = _run_site_pipeline(
-                session=session,
-                site_name=site_name,
-                update_on_conflict=update_on_conflict,
-            )
+            _run_site_pipeline(session=session, site_name=site_name, update_on_conflict=update_on_conflict)
 
         except (ValueError, EmptyTableError, ZoneInfoNotFoundError) as e:
             logger.exception(
@@ -136,12 +106,10 @@ def temp_schedule_pipeline(
 
     logger.info("Temperature schedule process has been completed.")
 
-    # return energy_price_processing_result
 
-
-def _run_site_pipeline(session: Session, site_name: str, update_on_conflict: bool) -> SitePipelineResult:
+def _run_site_pipeline(session: Session, site_name: str, update_on_conflict: bool) -> None:
     site = fetch_site(session=session, site_name=site_name)
-    site_algos = fetch_site_algos(session=session, site_id=site.id)  # A site could have multiple algos
+    site_algos = fetch_site_algos(session=session, site_id=site.id)  # One site could have multiple algos
 
     for site_algo in site_algos:
         algo_name = fetch_algo_name(session=session, algo_id=site_algo.algo_id)
@@ -151,13 +119,9 @@ def _run_site_pipeline(session: Session, site_name: str, update_on_conflict: boo
         if not site_algo.is_active:
             logger.warning(
                 f"No temperature schedule will be created for site '{site.name}' with algo '{algo_name}',"
-                f" since the algo is deactivated."
+                f" since the mentioned algo is deactivated."
             )
-            return SitePipelineResult(
-                site_id=site.id,
-                algo_id=site_algo.algo_id,
-                status=SitePipelineStatus.INACTIVED_ALGO,
-            )
+            continue
 
         price_metadata_id = fetch_price_metadata_id_by_bidding_zone(
             session=session,
@@ -194,88 +158,101 @@ def _run_site_pipeline(session: Session, site_name: str, update_on_conflict: boo
         have_unknown_issues = energy_price_processing_result.processing_issue == ProcessingIssues.UNKNOWN
         if algo_model == TempScheduleCreatorParams:
             if energy_prices_not_available or have_unknown_issues:
-                backup_temp_schedule = create_backup_temp_schedule(
-                    algo_freq=algo_params.freq,
-                    default_temp=algo_params.temps["default_temp"],
-                    tz="UTC",
-                )
-                logger.warning(
-                    f"Default temperature schedule of constant: {algo_params.temps['default_temp']}"
-                    f" °C is created for site '{site.name}' with algo '{algo_name}', since there is"
-                    f" no energy price available."
-                )
-                preprocessed_temp_schedule = preprocess_temp_schedule(
-                    temp_schedule=backup_temp_schedule,
-                    site_id=site.id,
-                    algo_id=site_algo.algo_id,
-                )
-                validation_result = validate_backup_temp_schedule(
-                    temp_schedule=preprocessed_temp_schedule,
-                    expected_length=expected_schedule_length,
-                    default_temp=algo_params.temps["default_temp"],
-                )
-                upsert_valid_temp_schedule(
+                _handle_backup_case_for_temp_schedule_creator(
                     session=session,
-                    temp_schedule=preprocessed_temp_schedule,
+                    site=site,
+                    algo_name=algo_name,
+                    site_algo=site_algo,
+                    algo_params=algo_params,
+                    expected_schedule_length=expected_schedule_length,
                     update_on_conflict=update_on_conflict,
                 )
-                return SitePipelineResult(
-                    site_id=site.id,
-                    algo_id=site_algo.algo_id,
-                    temp_schedule=preprocessed_temp_schedule,
-                    schedule_validation_result=validation_result,
-                    status=SitePipelineStatus.SUCCESS,
-                    is_backup_schedule=True,
-                    original_prices=energy_price_processing_result.original_prices,
-                    processed_prices=energy_price_processing_result.processed_prices,
-                    mask_of_filled_values=energy_price_processing_result.mask_of_filled_values,
-                    processing_issue=energy_price_processing_result.processing_issue,
-                )
-
             else:
-                temp_schedule = create_temp_schedule(
-                    prices=energy_price_processing_result.processed_prices,
-                    min_temp=algo_params.temps["min_temp"],
-                    max_temp=algo_params.temps["max_temp"],
-                    default_temp=algo_params.temps["default_temp"],
-                )
-                logger.info(
-                    f"Temperature schedule for site '{site.name}' with algo '{algo_name}' is created."
-                )
-                preprocessed_temp_schedule = preprocess_temp_schedule(
-                    temp_schedule=temp_schedule,
-                    site_id=site.id,
-                    algo_id=site_algo.algo_id,
-                )
-                validation_result = validate_temp_schedule(
-                    temp_schedule=preprocessed_temp_schedule,
-                    expected_length=expected_schedule_length,
-                    min_temp=algo_params.temps["min_temp"],
-                    max_temp=algo_params.temps["max_temp"],
-                )
-                upsert_valid_temp_schedule(
+                _handle_normal_case_for_temp_schedule_creator(
                     session=session,
-                    temp_schedule=preprocessed_temp_schedule,
+                    site=site,
+                    algo_name=algo_name,
+                    site_algo=site_algo,
+                    algo_params=algo_params,
+                    energy_price_processing_result=energy_price_processing_result,
+                    expected_schedule_length=expected_schedule_length,
                     update_on_conflict=update_on_conflict,
                 )
-                return SitePipelineResult(
-                    site_id=site.id,
-                    algo_id=site_algo.algo_id,
-                    temp_schedule=temp_schedule,
-                    schedule_validation_result=validation_result,
-                    status=SitePipelineStatus.SUCCESS,
-                    is_backup_schedule=False,
-                    original_prices=energy_price_processing_result.original_prices,
-                    processed_prices=energy_price_processing_result.processed_prices,
-                    mask_of_filled_values=energy_price_processing_result.mask_of_filled_values,
-                    processing_issue=energy_price_processing_result.processing_issue,
-                )
-
+        # Further temperature schedule creator versions can be added here with an elif statement.
         else:
             logger.warning(f"The algo model: '{algo_model}' is not available.")
 
-    raise TempSchedulePipelineError("Could not run a pipeline due to an unexpected error.")
+
+def _handle_normal_case_for_temp_schedule_creator(
+    session: Session,
+    site: Site,
+    algo_name: str,
+    site_algo: SiteAlgos,
+    algo_params: TempScheduleCreatorParams,
+    energy_price_processing_result: EnergyPriceProcessingResult,
+    expected_schedule_length: int,
+    update_on_conflict: bool,
+) -> None:
+    temp_schedule = create_temp_schedule(
+        prices=energy_price_processing_result.processed_prices,
+        min_temp=algo_params.temps["min_temp"],
+        max_temp=algo_params.temps["max_temp"],
+        default_temp=algo_params.temps["default_temp"],
+    )
+    logger.info(f"Temperature schedule for site '{site.name}' with algo '{algo_name}' is created.")
+    preprocessed_temp_schedule = preprocess_temp_schedule(
+        temp_schedule=temp_schedule,
+        site_id=site.id,
+        algo_id=site_algo.algo_id,
+    )
+    validation_result = validate_temp_schedule(
+        temp_schedule=preprocessed_temp_schedule,
+        expected_length=expected_schedule_length,
+        min_temp=algo_params.temps["min_temp"],
+        max_temp=algo_params.temps["max_temp"],
+    )
+    upsert_valid_temp_schedule(
+        session=session,
+        temp_schedule=preprocessed_temp_schedule,
+        update_on_conflict=update_on_conflict,
+    )
+
+
+def _handle_backup_case_for_temp_schedule_creator(
+    session: Session,
+    site: Site,
+    algo_name: str,
+    site_algo: SiteAlgos,
+    algo_params: TempScheduleCreatorParams,
+    expected_schedule_length: int,
+    update_on_conflict: bool,
+) -> None:
+    backup_temp_schedule = create_backup_temp_schedule(
+        algo_freq=algo_params.freq,
+        default_temp=algo_params.temps["default_temp"],
+        tz="UTC",
+    )
+    logger.warning(
+        f"Default temperature schedule of constant: {algo_params.temps['default_temp']}"
+        f" °C is created for site '{site.name}' with algo '{algo_name}', since there is"
+        f" no energy price available."
+    )
+    preprocessed_backup_temp_schedule = preprocess_temp_schedule(
+        temp_schedule=backup_temp_schedule,
+        site_id=site.id,
+        algo_id=site_algo.algo_id,
+    )
+    backup_validation_result = validate_backup_temp_schedule(
+        temp_schedule=preprocessed_backup_temp_schedule,
+        expected_length=expected_schedule_length,
+        default_temp=algo_params.temps["default_temp"],
+    )
+    upsert_valid_temp_schedule(
+        session=session,
+        temp_schedule=preprocessed_backup_temp_schedule,
+        update_on_conflict=update_on_conflict,
+    )
 
 
 if __name__ == "__main__":
-    result = temp_schedule_pipeline("all_site_ids")
+    temp_schedule_pipeline("all_site_ids")

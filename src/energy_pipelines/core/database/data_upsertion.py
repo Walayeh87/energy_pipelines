@@ -30,26 +30,25 @@ def upsert_energy_prices(session: Session, prices: DataFrame, update_on_conflict
         )
 
         if price_exists:
-            logger.info(f"{len(prices)} energy prices have been updated in the database successfully.")
+            logger.info(f"{len(prices)} energy prices will be updated in the database successfully.")
         else:
-            logger.info(f"{len(prices)} energy prices have been upserted into the database successfully.")
+            logger.info(f"{len(prices)} energy prices will be upserted into the database successfully.")
     else:
         stmt = stmt.on_conflict_do_nothing(index_elements=[PriceData.timestamp, PriceData.price_metadata_id])
 
         if price_exists:
             logger.info(
-                "No data has been upserted to the DB since they are already exist."
+                "No data will be upserted to the DB since they are already exist."
                 " If you want to update them, set the parameter 'update_on_conflict' to True."
             )
         else:
-            logger.info(f"{len(prices)} energy prices have been upserted into the database successfully.")
+            logger.info(f"{len(prices)} energy prices will be upserted into the database successfully.")
 
     try:
         session.execute(stmt)
         session.commit()
-    except Exception:
-        session.rollback()
-        raise
+    except Exception as e:
+        raise Exception("An error occurred while trying to upsert temperature schedule values.") from e
 
 
 def _check_price_existence(
@@ -90,12 +89,12 @@ def upsert_valid_temp_schedule(
 
         if schedule_exists:
             logger.info(
-                f"{len(temp_schedule)} temperature schedule values have been updated in the database"
+                f"{len(temp_schedule)} temperature schedule values will be updated in the database"
                 f" successfully."
             )
         else:
             logger.info(
-                f"{len(temp_schedule)} temperature schedule values have been upserted into the database"
+                f"{len(temp_schedule)} temperature schedule values will be upserted into the database"
                 f" successfully."
             )
     else:
@@ -105,21 +104,21 @@ def upsert_valid_temp_schedule(
 
         if schedule_exists:
             logger.info(
-                "No data has been upserted to the DB since they are already exist."
+                "No data will be upserted to the DB since they are already exist."
                 " If you want to update them, set the parameter 'update_on_conflict' to True."
             )
         else:
             logger.info(
-                f"{len(temp_schedule)} temperature schedule values have been upserted into the database"
+                f"{len(temp_schedule)} temperature schedule values will be upserted into the database"
                 f" successfully."
             )
 
     try:
         session.execute(stmt)
         session.commit()
-    except Exception:
+    except Exception as e:
         session.rollback()
-        raise
+        raise Exception("An error occurred while trying to upsert temperature schedule values.") from e
 
 
 def _check_temp_schedule_existence(
