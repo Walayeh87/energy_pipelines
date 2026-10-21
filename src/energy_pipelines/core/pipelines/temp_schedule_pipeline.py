@@ -232,42 +232,44 @@ def _run_site_pipeline(session: Session, site_name: str, update_on_conflict: boo
                     processing_issue=energy_price_processing_result.processing_issue,
                 )
 
-        if algo_model == TempScheduleCreatorParams:
-            temp_schedule = create_temp_schedule(
-                prices=energy_price_processing_result.processed_prices,
-                min_temp=algo_params.temps["min_temp"],
-                max_temp=algo_params.temps["max_temp"],
-                default_temp=algo_params.temps["default_temp"],
-            )
-            logger.info(f"Temperature schedule for site '{site.name}' with algo '{algo_name}' is created.")
-            preprocessed_temp_schedule = preprocess_temp_schedule(
-                temp_schedule=temp_schedule,
-                site_id=site.id,
-                algo_id=site_algo.algo_id,
-            )
-            validation_result = validate_temp_schedule(
-                temp_schedule=preprocessed_temp_schedule,
-                expected_length=expected_schedule_length,
-                min_temp=algo_params.temps["min_temp"],
-                max_temp=algo_params.temps["max_temp"],
-            )
-            upsert_valid_temp_schedule(
-                session=session,
-                temp_schedule=preprocessed_temp_schedule,
-                update_on_conflict=update_on_conflict,
-            )
-            return SitePipelineResult(
-                site_id=site.id,
-                algo_id=site_algo.algo_id,
-                temp_schedule=temp_schedule,
-                schedule_validation_result=validation_result,
-                status=SitePipelineStatus.SUCCESS,
-                is_backup_schedule=False,
-                original_prices=energy_price_processing_result.original_prices,
-                processed_prices=energy_price_processing_result.processed_prices,
-                mask_of_filled_values=energy_price_processing_result.mask_of_filled_values,
-                processing_issue=energy_price_processing_result.processing_issue,
-            )
+            else:
+                temp_schedule = create_temp_schedule(
+                    prices=energy_price_processing_result.processed_prices,
+                    min_temp=algo_params.temps["min_temp"],
+                    max_temp=algo_params.temps["max_temp"],
+                    default_temp=algo_params.temps["default_temp"],
+                )
+                logger.info(
+                    f"Temperature schedule for site '{site.name}' with algo '{algo_name}' is created."
+                )
+                preprocessed_temp_schedule = preprocess_temp_schedule(
+                    temp_schedule=temp_schedule,
+                    site_id=site.id,
+                    algo_id=site_algo.algo_id,
+                )
+                validation_result = validate_temp_schedule(
+                    temp_schedule=preprocessed_temp_schedule,
+                    expected_length=expected_schedule_length,
+                    min_temp=algo_params.temps["min_temp"],
+                    max_temp=algo_params.temps["max_temp"],
+                )
+                upsert_valid_temp_schedule(
+                    session=session,
+                    temp_schedule=preprocessed_temp_schedule,
+                    update_on_conflict=update_on_conflict,
+                )
+                return SitePipelineResult(
+                    site_id=site.id,
+                    algo_id=site_algo.algo_id,
+                    temp_schedule=temp_schedule,
+                    schedule_validation_result=validation_result,
+                    status=SitePipelineStatus.SUCCESS,
+                    is_backup_schedule=False,
+                    original_prices=energy_price_processing_result.original_prices,
+                    processed_prices=energy_price_processing_result.processed_prices,
+                    mask_of_filled_values=energy_price_processing_result.mask_of_filled_values,
+                    processing_issue=energy_price_processing_result.processing_issue,
+                )
 
         else:
             logger.warning(f"The algo model: '{algo_model}' is not available.")
