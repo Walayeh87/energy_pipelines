@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, fields
 
 from pandas import DataFrame
 
@@ -7,12 +7,20 @@ from energy_pipelines.core.database.table_models import AlgosOutput
 
 @dataclass
 class TempScheduleValidationResult:
+    # IMPORTANT!
+    # When is_valid is True, the rest must be None.
+    # When is_valid is False, one of the rest must be True, the others are None.
+    # If this behavior changed, consider modifying get_error!
     is_valid: bool
 
     has_length_mismatch: bool | None = None
     timestamps_have_nats: bool | None = None
     values_have_nans: bool | None = None
     implausible_values: bool | None = None
+
+
+def get_error(result: TempScheduleValidationResult) -> str:
+    return next(field.name for field in fields(result) if getattr(result, field.name) is True)
 
 
 def validate_backup_temp_schedule(
