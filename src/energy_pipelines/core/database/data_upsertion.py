@@ -3,10 +3,9 @@ from typing import Any
 
 from pandas import DataFrame
 from psycopg import OperationalError
-from sqlalchemy import exists, select, tuple_
+from sqlalchemy import FromClause, exists, select, tuple_
 from sqlalchemy.dialects.postgresql import Insert, insert
 from sqlalchemy.orm import Session
-from sqlalchemy.sql.schema import Table
 
 from energy_pipelines.core.database.table_models import (
     AlgosOutput,
@@ -25,14 +24,14 @@ def upsert_energy_prices(session: Session, prices: DataFrame, update_on_conflict
         records_exist = _check_records_existence(
             session=session,
             table=PriceData.__table__,
-            keys=list(
+            primary_keys=[PriceData.timestamp.key, PriceData.price_metadata_id.key],
+            primary_values=list(
                 zip(
                     prices[PriceData.timestamp.key].tolist(),
                     prices[PriceData.price_metadata_id.key].tolist(),
                     strict=True,
                 )
             ),
-            key_columns=[PriceData.timestamp.key, PriceData.price_metadata_id.key],
         )
 
     except OperationalError as e:
@@ -43,8 +42,8 @@ def upsert_energy_prices(session: Session, prices: DataFrame, update_on_conflict
 
     stmt = _handle_upsertion_policy(
         stmt=stmt,
-        table2insert=prices,
-        table_exists=records_exist,
+        records2insert=prices,
+        records_exist=records_exist,
         primary_keys=[PriceData.timestamp.key, PriceData.price_metadata_id.key],
         cols2exclude_as_mapper={
             column.name: getattr(stmt.excluded, column.name)
@@ -70,8 +69,8 @@ def upsert_price_fetching_failures(
 
     stmt = _handle_upsertion_policy(
         stmt=stmt,
-        table2insert=price_fetching_failures,
-        table_exists=False,
+        records2insert=price_fetching_failures,
+        records_exist=False,
         primary_keys=[PriceFetchingFailures.id.key],
         cols2exclude_as_mapper={
             column.name: getattr(stmt.excluded, column.name)
@@ -100,7 +99,8 @@ def upsert_valid_temp_schedule(
         records_exist = _check_records_existence(
             session=session,
             table=AlgosOutput.__table__,
-            keys=list(
+            primary_keys=[AlgosOutput.timestamp.key, AlgosOutput.site_id.key, AlgosOutput.algo_id.key],
+            primary_values=list(
                 zip(
                     temp_schedule[AlgosOutput.timestamp.key].tolist(),
                     temp_schedule[AlgosOutput.site_id.key].tolist(),
@@ -108,7 +108,6 @@ def upsert_valid_temp_schedule(
                     strict=True,
                 )
             ),
-            key_columns=[AlgosOutput.timestamp.key, AlgosOutput.site_id.key, AlgosOutput.algo_id.key],
         )
     except OperationalError as e:
         raise OperationalError(f"An error occurred while checking temperature schedule existence: {e}") from e
@@ -118,8 +117,8 @@ def upsert_valid_temp_schedule(
 
     stmt = _handle_upsertion_policy(
         stmt=stmt,
-        table2insert=temp_schedule,
-        table_exists=records_exist,
+        records2insert=temp_schedule,
+        records_exist=records_exist,
         primary_keys=[AlgosOutput.timestamp.key, AlgosOutput.site_id.key, AlgosOutput.algo_id.key],
         cols2exclude_as_mapper={
             column.name: getattr(stmt.excluded, column.name)
@@ -153,56 +152,44 @@ def upsert_failing_temp_schedule(
 
 def _check_records_existence(
     session: Session,
-    table: Table,
-    keys: list[tuple[Any, ...]],
-    key_columns: list[str],
+    table: FromClause,
+    primary_keys: list[str],
+    primary_values: list[tuple[Any, ...]],
 ) -> bool:
-    if not keys:
+    if not primary_values:
         return False
 
-    columns = [table.c[column] for column in key_columns]
+    columns = [table.c[column] for column in primary_keys]
 
-    stmt = select(exists().where(tuple_(*columns).in_(keys)))
+    stmt = select(exists().where(tuple_(*columns).in_(primary_values)))
 
     return bool(session.scalar(stmt))
 
 
 def _handle_upsertion_policy(
     stmt: Insert,
-    table2insert: DataFrame,
-    table_exists: bool,
+    records2insert: DataFrame,
+    records_exist: bool,
     primary_keys: list[str],
     cols2exclude_as_mapper: dict[str, Any],
     update_on_conflict: bool,
 ) -> Insert:
     if update_on_conflict:
-        stmt = stmt.on_conflict_do_update(
-            index_elements=primary_keys,
-            set_=cols2exclude_as_mapper,
-        )
+        stmt = stmt.on_conflict_do_update(index_elements=primary_keys, set_=cols2exclude_as_mapper)
 
-        if table_exists:
-            logger.info(
-                f"{len(table2insert)} temperature schedule values will be updated in the database"
-                f" successfully."
-            )
+        if records_exist:
+            logger.info(f"{len(records2insert)} rows will be updated in the database successfully.")
         else:
-            logger.info(
-                f"{len(table2insert)} temperature schedule values will be upserted into the database"
-                f" successfully."
-            )
+            logger.info(f"{len(records2insert)} rows will be upserted into the database successfully.")
     else:
         stmt = stmt.on_conflict_do_nothing(index_elements=primary_keys)
 
-        if table_exists:
+        if records_exist:
             logger.info(
                 "No data will be upserted to the DB since they are already exist."
                 " If you want to update them, set the parameter 'update_on_conflict' to True."
             )
         else:
-            logger.info(
-                f"{len(table2insert)} temperature schedule values will be upserted into the database"
-                f" successfully."
-            )
+            logger.info(f"{len(records2insert)} rows will be upserted into the database successfully.")
 
     return stmt
