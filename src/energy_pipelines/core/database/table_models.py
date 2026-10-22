@@ -86,6 +86,30 @@ class PriceData(Base):
         )
 
 
+class InvalidPriceData(Base):
+    __tablename__ = "invalid_price_data"
+    __table_args__ = {"schema": SchemaNames.ENERGY_PRICES}
+
+    price_metadata_id: Mapped[int] = mapped_column(
+        BigInteger,
+        ForeignKey(PriceMetadata.price_metadata_id),
+        nullable=False,
+        primary_key=True,
+    )
+    timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=True)
+    values: Mapped[int | float | None] = mapped_column(Numeric, nullable=True)
+    reporting_time_in_local_tz: Mapped[datetime] = mapped_column(DateTime(timezone=False), nullable=False)
+
+    def __repr__(self) -> str:
+        return (
+            f"{self.__table_args__['schema']}.{self.__tablename__}("
+            f"price_metadata_id={self.price_metadata_id!r}, "
+            f"timestamp={self.timestamp}, "
+            f"values={self.values}, "
+            f"reporting_time_in_local_tz={self.reporting_time_in_local_tz})"
+        )
+
+
 class Site(Base):
     __tablename__ = "site"
     __table_args__ = {"schema": SchemaNames.SITES}
