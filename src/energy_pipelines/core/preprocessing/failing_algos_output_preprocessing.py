@@ -10,7 +10,7 @@ def preprocess_failing_temp_schedule(
     site_id: int,
     algo_id: int,
     temp_schedule: DataFrame,
-    reporting_time_in_local_tz: datetime,
+    reporting_time: datetime,
     failing_reason: str,
     energy_price_processing_result: EnergyPriceProcessingResult,
     is_backup: bool,
@@ -34,7 +34,7 @@ def preprocess_failing_temp_schedule(
 
     failing_algos_output[FailingAlgosOutput.values.key] = temp_schedule[AlgosOutput.values.key]
     failing_algos_output[FailingAlgosOutput.timestamp.key] = temp_schedule[AlgosOutput.timestamp.key]
-    failing_algos_output[FailingAlgosOutput.reporting_time_in_local_tz.key] = reporting_time_in_local_tz
+    failing_algos_output[FailingAlgosOutput.reporting_time.key] = reporting_time
     failing_algos_output[FailingAlgosOutput.failing_reason.key] = failing_reason
     failing_algos_output[FailingAlgosOutput.is_backup.key] = is_backup
 

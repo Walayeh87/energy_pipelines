@@ -1,7 +1,7 @@
 import logging
 from datetime import datetime
 from typing import Literal
-from zoneinfo import ZoneInfoNotFoundError
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from pandas import Timedelta
 from sqlalchemy.orm import Session
@@ -231,7 +231,7 @@ def _handle_normal_case_for_temp_schedule_creator(
             site_id=site.id,
             algo_id=site_algo.algo_id,
             temp_schedule=preprocessed_temp_schedule,
-            reporting_time_in_local_tz=datetime.now(),
+            reporting_time=datetime.now(ZoneInfo("UTC")),
             failing_reason=get_temp_schedule_error(result=validation_result),
             energy_price_processing_result=energy_price_processing_result,
             is_backup=False,
@@ -283,7 +283,7 @@ def _handle_backup_case_for_temp_schedule_creator(
             site_id=site.id,
             algo_id=site_algo.algo_id,
             temp_schedule=preprocessed_backup_temp_schedule,
-            reporting_time_in_local_tz=datetime.now(),
+            reporting_time=datetime.now(ZoneInfo("UTC")),
             failing_reason=get_temp_schedule_error(result=backup_validation_result),
             energy_price_processing_result=energy_price_processing_result,
             is_backup=True,

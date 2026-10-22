@@ -229,7 +229,7 @@ class FailingAlgosOutput(Base):
     timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, primary_key=True)
     values: Mapped[int | float] = mapped_column(Numeric, nullable=True)
     failing_reason: Mapped[str] = mapped_column(String(50), nullable=False)
-    reporting_time_in_local_tz: Mapped[datetime] = mapped_column(DateTime(timezone=False), nullable=False)
+    reporting_time: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     processed_prices: Mapped[int | float | None] = mapped_column(Numeric, nullable=True)
     mask_of_filled_prices_values: Mapped[bool | None] = mapped_column(BOOLEAN, nullable=True)
     price_processing_issue: Mapped[str] = mapped_column(String(50), nullable=False)
@@ -243,7 +243,7 @@ class FailingAlgosOutput(Base):
             f"timestamp={self.timestamp!r}, "
             f"values={self.values!r}, "
             f"failing_reason={self.failing_reason!r}, "
-            f"reporting_time_in_local_tz={self.reporting_time_in_local_tz!r}, "
+            f"reporting_time={self.reporting_time!r}, "
             f"processed_prices={self.processed_prices!r}, "
             f"mask_of_filled_prices_values={self.mask_of_filled_prices_values!r}, "
             f"price_processing_issue={self.price_processing_issue!r}, "
