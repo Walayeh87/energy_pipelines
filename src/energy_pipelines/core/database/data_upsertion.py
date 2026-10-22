@@ -1,12 +1,12 @@
 import logging
-from datetime import datetime
 from typing import Any
 
-from pandas import DataFrame, Series
+from pandas import DataFrame
 from psycopg import OperationalError
 from sqlalchemy import exists, select, tuple_
 from sqlalchemy.dialects.postgresql import Insert, insert
 from sqlalchemy.orm import Session
+from sqlalchemy.sql.schema import Table
 
 from energy_pipelines.core.database.table_models import AlgosOutput, FailingAlgosOutput, PriceData
 
@@ -17,21 +17,29 @@ def upsert_valid_energy_prices(session: Session, prices: DataFrame, update_on_co
     stmt = insert(PriceData).values(prices.to_dict(orient="records"))
 
     try:
-        price_exists = _check_price_existence(
+        records_exist = _check_records_existence(
             session=session,
-            timestamps=prices[PriceData.timestamp.key],
-            price_metadata_ids=prices[PriceData.price_metadata_id.key],
+            table=PriceData.__table__,
+            keys=list(
+                zip(
+                    prices[PriceData.timestamp.key].tolist(),
+                    prices[PriceData.price_metadata_id.key].tolist(),
+                    strict=True,
+                )
+            ),
+            key_columns=[PriceData.timestamp.key, PriceData.price_metadata_id.key],
         )
+
     except OperationalError as e:
         raise OperationalError(f"An error occurred while checking price existence: {e}") from e
 
-    if price_exists:
+    if records_exist:
         logger.info("Some/all energy prices already exist in the database.")
 
     stmt = _handle_upsertion_policy(
         stmt=stmt,
         table2insert=prices,
-        table_exists=price_exists,
+        table_exists=records_exist,
         primary_keys=[PriceData.timestamp.key, PriceData.price_metadata_id.key],
         cols2exclude_as_mapper={
             column.name: getattr(stmt.excluded, column.name)
@@ -56,22 +64,29 @@ def upsert_valid_temp_schedule(
     stmt = insert(AlgosOutput).values(temp_schedule.to_dict(orient="records"))
 
     try:
-        schedule_exists = _check_temp_schedule_existence(
+        records_exist = _check_records_existence(
             session=session,
-            timestamps=temp_schedule[AlgosOutput.timestamp.key],
-            site_ids=temp_schedule[AlgosOutput.site_id.key],
-            algo_ids=temp_schedule[AlgosOutput.algo_id.key],
+            table=AlgosOutput.__table__,
+            keys=list(
+                zip(
+                    temp_schedule[AlgosOutput.timestamp.key].tolist(),
+                    temp_schedule[AlgosOutput.site_id.key].tolist(),
+                    temp_schedule[AlgosOutput.algo_id.key].tolist(),
+                    strict=True,
+                )
+            ),
+            key_columns=[AlgosOutput.timestamp.key, AlgosOutput.site_id.key, AlgosOutput.algo_id.key],
         )
     except OperationalError as e:
         raise OperationalError(f"An error occurred while checking temperature schedule existence: {e}") from e
 
-    if schedule_exists:
+    if records_exist:
         logger.info("Some/all temperature schedule values already exist in the database.")
 
     stmt = _handle_upsertion_policy(
         stmt=stmt,
         table2insert=temp_schedule,
-        table_exists=schedule_exists,
+        table_exists=records_exist,
         primary_keys=[AlgosOutput.timestamp.key, AlgosOutput.site_id.key, AlgosOutput.algo_id.key],
         cols2exclude_as_mapper={
             column.name: getattr(stmt.excluded, column.name)
@@ -103,30 +118,18 @@ def upsert_failing_temp_schedule(
         raise Exception("An error occurred while trying to upsert temperature schedule values.") from e
 
 
-def _check_price_existence(
-    session: Session, timestamps: Series[datetime], price_metadata_ids: Series[int]
+def _check_records_existence(
+    session: Session,
+    table: Table,
+    keys: list[tuple[Any, ...]],
+    key_columns: list[str],
 ) -> bool:
-    keys = list(zip(timestamps.tolist(), price_metadata_ids.tolist(), strict=True))
-
     if not keys:
         return False
 
-    stmt = select(exists().where(tuple_(PriceData.timestamp, PriceData.price_metadata_id).in_(keys)))
+    columns = [table.c[column] for column in key_columns]
 
-    return bool(session.scalar(stmt))
-
-
-def _check_temp_schedule_existence(
-    session: Session, timestamps: Series[datetime], site_ids: Series[int], algo_ids: Series[int]
-) -> bool:
-    keys = list(zip(timestamps.tolist(), site_ids.tolist(), algo_ids.to_list(), strict=True))
-
-    if not keys:
-        return False
-
-    stmt = select(
-        exists().where(tuple_(AlgosOutput.timestamp, AlgosOutput.site_id, AlgosOutput.algo_id).in_(keys))
-    )
+    stmt = select(exists().where(tuple_(*columns).in_(keys)))
 
     return bool(session.scalar(stmt))
 
