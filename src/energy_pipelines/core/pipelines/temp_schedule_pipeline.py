@@ -42,7 +42,7 @@ from energy_pipelines.core.processing.energy_price_processing import (
     process_energy_price_data,
 )
 from energy_pipelines.core.validation.temp_schedule_validator import (
-    get_error,
+    get_temp_schedule_error,
     validate_backup_temp_schedule,
     validate_temp_schedule,
 )
@@ -232,7 +232,7 @@ def _handle_normal_case_for_temp_schedule_creator(
             algo_id=site_algo.algo_id,
             temp_schedule=preprocessed_temp_schedule,
             reporting_time_in_local_tz=datetime.now(),
-            failing_reason=get_error(result=validation_result),
+            failing_reason=get_temp_schedule_error(result=validation_result),
             energy_price_processing_result=energy_price_processing_result,
             is_backup=False,
         )
@@ -284,7 +284,7 @@ def _handle_backup_case_for_temp_schedule_creator(
             algo_id=site_algo.algo_id,
             temp_schedule=preprocessed_backup_temp_schedule,
             reporting_time_in_local_tz=datetime.now(),
-            failing_reason=get_error(result=backup_validation_result),
+            failing_reason=get_temp_schedule_error(result=backup_validation_result),
             energy_price_processing_result=energy_price_processing_result,
             is_backup=True,
         )

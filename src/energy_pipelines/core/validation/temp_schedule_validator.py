@@ -19,7 +19,7 @@ class TempScheduleValidationResult:
     implausible_values: bool | None = None
 
 
-def get_error(result: TempScheduleValidationResult) -> str:
+def get_temp_schedule_error(result: TempScheduleValidationResult) -> str:
     return next(field.name for field in fields(result) if getattr(result, field.name) is True)
 
 
