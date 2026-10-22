@@ -1,11 +1,12 @@
 import logging
+from datetime import datetime
 from typing import Any
 
 import pandas as pd
 from pandas import DataFrame
 
 from energy_pipelines.core.database.api_models import EnergyChartsKeys
-from energy_pipelines.core.database.table_models import PriceData
+from energy_pipelines.core.database.table_models import PriceData, PriceFetchingFailures
 
 logger = logging.getLogger(__name__)
 
@@ -21,6 +22,22 @@ def preprocess_price_data(
     df = df.sort_values(timestamp_key)
 
     logger.info("Energy prices have been processed successfully.")
+
+    return df
+
+
+def preprocess_price_fetching_failures(
+    price_metadata_id: int,
+    http_response_status_code: int,
+    recording_time: datetime,
+    error_msg: str,
+) -> DataFrame:
+    df = DataFrame()
+
+    df[PriceFetchingFailures.price_metadata_id.key] = [price_metadata_id]
+    df[PriceFetchingFailures.http_response_status_code.key] = [http_response_status_code]
+    df[PriceFetchingFailures.recording_time.key] = [recording_time]
+    df[PriceFetchingFailures.error_msg.key] = [error_msg]
 
     return df
 

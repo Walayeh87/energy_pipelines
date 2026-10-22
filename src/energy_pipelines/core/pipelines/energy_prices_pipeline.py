@@ -1,4 +1,6 @@
 import logging
+from datetime import datetime
+from zoneinfo import ZoneInfo
 
 from psycopg import OperationalError
 from sqlalchemy.orm import Session
@@ -7,10 +9,13 @@ from energy_pipelines.core.database.connection import create_db_engine, create_d
 from energy_pipelines.core.database.data_fetchers_from_db import (
     fetch_bidding_zone_and_price_metadata_id_as_mapper,
 )
-from energy_pipelines.core.database.data_upsertion import upsert_energy_prices
+from energy_pipelines.core.database.data_upsertion import upsert_energy_prices, upsert_price_fetching_failures
 from energy_pipelines.core.ingestion.api_fetcher import fetch_data_from_api
 from energy_pipelines.core.ingestion.url_creation import create_url_for_tomorrows_energy_prices
-from energy_pipelines.core.preprocessing.energy_price_preprocessing import preprocess_price_data
+from energy_pipelines.core.preprocessing.energy_price_preprocessing import (
+    preprocess_price_data,
+    preprocess_price_fetching_failures,
+)
 from energy_pipelines.utils.logging_config import setup_logging
 
 setup_logging()
@@ -49,16 +54,35 @@ def _run_energy_price_pipeline(
     update_on_conflict: bool,
 ) -> None:
     prices_url = create_url_for_tomorrows_energy_prices(bidding_zone=bidding_zone)
-    prices_as_dict = fetch_data_from_api(url=prices_url)
-    preprocessed_prices = preprocess_price_data(
-        prices_as_dict=prices_as_dict,
-        price_metadata_id=price_metadata_id,
-    )
-    upsert_energy_prices(
-        session=session,
-        prices=preprocessed_prices,
-        update_on_conflict=update_on_conflict,
-    )
+    fetching_result = fetch_data_from_api(url=prices_url)
+
+    successful_http_response_status_code = 200
+    if fetching_result.http_response_status_code == successful_http_response_status_code:
+        preprocessed_prices = preprocess_price_data(
+            prices_as_dict=fetching_result.data_as_dict,
+            price_metadata_id=price_metadata_id,
+        )
+        upsert_energy_prices(
+            session=session,
+            prices=preprocessed_prices,
+            update_on_conflict=update_on_conflict,
+        )
+    else:
+        logger.warning(
+            f"Failed to fetch energy prices for bidding zone '{bidding_zone}'"
+            f" and price metadata ID {price_metadata_id}."
+        )
+        preprocessed_price_fetching_failures = preprocess_price_fetching_failures(
+            price_metadata_id=price_metadata_id,
+            http_response_status_code=fetching_result.http_response_status_code,
+            recording_time=datetime.now(tz=ZoneInfo("UTC")),
+            error_msg=fetching_result.error_msg,
+        )
+        upsert_price_fetching_failures(
+            session=session,
+            price_fetching_failures=preprocessed_price_fetching_failures,
+            update_on_conflict=update_on_conflict,
+        )
 
 
 if __name__ == "__main__":

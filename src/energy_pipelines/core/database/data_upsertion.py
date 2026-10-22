@@ -8,7 +8,12 @@ from sqlalchemy.dialects.postgresql import Insert, insert
 from sqlalchemy.orm import Session
 from sqlalchemy.sql.schema import Table
 
-from energy_pipelines.core.database.table_models import AlgosOutput, FailingAlgosOutput, PriceData
+from energy_pipelines.core.database.table_models import (
+    AlgosOutput,
+    FailingAlgosOutput,
+    PriceData,
+    PriceFetchingFailures,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -54,6 +59,34 @@ def upsert_energy_prices(session: Session, prices: DataFrame, update_on_conflict
         session.commit()
     except Exception as e:
         raise Exception("An error occurred while trying to upsert temperature schedule values.") from e
+
+
+def upsert_price_fetching_failures(
+    session: Session,
+    price_fetching_failures: DataFrame,
+    update_on_conflict: bool,
+) -> None:
+    stmt = insert(PriceFetchingFailures).values(price_fetching_failures.to_dict(orient="records"))
+
+    stmt = _handle_upsertion_policy(
+        stmt=stmt,
+        table2insert=price_fetching_failures,
+        table_exists=False,
+        primary_keys=[PriceFetchingFailures.id.key],
+        cols2exclude_as_mapper={
+            column.name: getattr(stmt.excluded, column.name)
+            for column in PriceFetchingFailures.__table__.columns
+            if not column.primary_key
+        },
+        update_on_conflict=update_on_conflict,
+    )
+
+    try:
+        session.execute(stmt)
+        session.commit()
+    except Exception as e:
+        session.rollback()
+        raise Exception("An error occurred while trying to upsert price fetching failures.") from e
 
 
 def upsert_valid_temp_schedule(
