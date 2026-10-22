@@ -36,7 +36,7 @@ def preprocess_price_fetching_failures(
 
     df[PriceFetchingFailures.price_metadata_id.key] = [price_metadata_id]
     df[PriceFetchingFailures.http_response_status_code.key] = [http_response_status_code]
-    df[PriceFetchingFailures.recording_time.key] = [recording_time]
+    df[PriceFetchingFailures.reporting_time.key] = [recording_time]
     df[PriceFetchingFailures.error_msg.key] = [error_msg]
 
     return df

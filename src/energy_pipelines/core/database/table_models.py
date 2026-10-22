@@ -97,7 +97,7 @@ class PriceFetchingFailures(Base):
         nullable=False,
     )
     http_response_status_code: Mapped[int] = mapped_column(SmallInteger, nullable=False)
-    recording_time: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    reporting_time: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     error_msg: Mapped[str] = mapped_column(Text, nullable=False)
 
     def __repr__(self) -> str:
@@ -106,7 +106,7 @@ class PriceFetchingFailures(Base):
             f"id={self.id!r}, "
             f"price_metadata_id={self.price_metadata_id!r}, "
             f"http_response_status_code={self.http_response_status_code!r}, "
-            f"recording_time={self.recording_time}, "
+            f"reporting_time={self.reporting_time}, "
             f"error_msg={self.error_msg!r})"
         )
 
