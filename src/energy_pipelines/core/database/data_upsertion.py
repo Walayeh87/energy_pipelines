@@ -30,7 +30,11 @@ def upsert_valid_energy_prices(session: Session, prices: DataFrame, update_on_co
     if update_on_conflict:
         stmt = stmt.on_conflict_do_update(
             index_elements=[PriceData.timestamp, PriceData.price_metadata_id],
-            set_={PriceData.values.key: stmt.excluded.energy_price},
+            set_={
+                column.name: getattr(stmt.excluded, column.name)
+                for column in PriceData.__table__.columns
+                if not column.primary_key
+            },
         )
 
         if price_exists:
@@ -88,7 +92,11 @@ def upsert_valid_temp_schedule(
     if update_on_conflict:
         stmt = stmt.on_conflict_do_update(
             index_elements=[AlgosOutput.timestamp, AlgosOutput.site_id, AlgosOutput.algo_id],
-            set_={AlgosOutput.values.key: stmt.excluded.values},
+            set_={
+                column.name: getattr(stmt.excluded, column.name)
+                for column in AlgosOutput.__table__.columns
+                if not column.primary_key
+            },
         )
 
         if schedule_exists:
