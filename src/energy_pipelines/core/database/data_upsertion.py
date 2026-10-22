@@ -2,6 +2,7 @@ import logging
 from datetime import datetime
 
 from pandas import DataFrame, Series
+from psycopg import OperationalError
 from sqlalchemy import exists, select, tuple_
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session
@@ -14,12 +15,14 @@ logger = logging.getLogger(__name__)
 def upsert_energy_prices(session: Session, prices: DataFrame, update_on_conflict: bool) -> None:
     stmt = insert(PriceData).values(prices.to_dict(orient="records"))
 
-    # try psycopg.OperationalError
-    price_exists = _check_price_existence(
-        session=session,
-        timestamps=prices[PriceData.timestamp.key],
-        price_metadata_ids=prices[PriceData.price_metadata_id.key],
-    )
+    try:
+        price_exists = _check_price_existence(
+            session=session,
+            timestamps=prices[PriceData.timestamp.key],
+            price_metadata_ids=prices[PriceData.price_metadata_id.key],
+        )
+    except OperationalError as e:
+        raise OperationalError(f"An error occurred while checking price existence: {e}") from e
 
     if price_exists:
         logger.info("Some/all energy prices already exist in the database.")
