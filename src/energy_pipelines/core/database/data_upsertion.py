@@ -30,7 +30,7 @@ def upsert_energy_prices(session: Session, prices: DataFrame, update_on_conflict
     if update_on_conflict:
         stmt = stmt.on_conflict_do_update(
             index_elements=[PriceData.timestamp, PriceData.price_metadata_id],
-            set_={PriceData.energy_price.key: stmt.excluded.energy_price},
+            set_={PriceData.values.key: stmt.excluded.energy_price},
         )
 
         if price_exists:

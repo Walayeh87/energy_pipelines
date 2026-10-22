@@ -141,7 +141,7 @@ def _run_site_pipeline(session: Session, site_name: str, update_on_conflict: boo
         end = start + Timedelta(days=1)
         energy_price_fetching_result = fetch_energy_price_data(
             session=session,
-            cols2fetch=[PriceData.timestamp, PriceData.energy_price],
+            cols2fetch=[PriceData.timestamp, PriceData.values],
             price_metadata_id=price_metadata_id,
             start=start,
             end=end,

@@ -78,7 +78,7 @@ def process_energy_price_data(
         tz=price_tz,
     )
 
-    no_missing_prices = not prices[PriceData.energy_price.key].isna().any()
+    no_missing_prices = not prices[PriceData.values.key].isna().any()
     indices_match = prices.index.equals(expected_index)
     if indices_match and no_missing_prices:
         logger.info("Energy price data is already in the expected format.")
@@ -103,23 +103,23 @@ def process_energy_price_data(
     actual_prices_count = len(prices)
 
     has_length_mismatch = expected_prices_count != actual_prices_count
-    contains_nans = prices[PriceData.energy_price.key].isna().any()
+    contains_nans = prices[PriceData.values.key].isna().any()
     if has_length_mismatch or contains_nans:
         logger.warning("Energy prices contain missing values and/or missing indices.")
 
         prices = prices.reindex(expected_index)
-        mask_of_nans = prices[PriceData.energy_price.key].isna()
-        missing_values_before = prices[PriceData.energy_price.key].isna().sum()
+        mask_of_nans = prices[PriceData.values.key].isna()
+        missing_values_before = prices[PriceData.values.key].isna().sum()
 
         prices = _fill_inner_missing_energy_prices(prices=prices)
-        if prices[PriceData.energy_price.key].isna().any():
+        if prices[PriceData.values.key].isna().any():
             logger.warning(
                 "Some/all missing prices are on the beginning or the end of the fetched prices. "
                 "Nearest prices will be used to close the gaps."
             )
             prices = _fill_outer_missing_energy_prices(prices=prices)
 
-        missing_values_after = prices[PriceData.energy_price.key].isna().sum()
+        missing_values_after = prices[PriceData.values.key].isna().sum()
         filled_values_count = missing_values_before - missing_values_after
 
         logger.info(f"{filled_values_count} price value(s) was/were filled.")
@@ -176,7 +176,7 @@ if __name__ == "__main__":
     end_date = datetime(2026, 10, 2, tzinfo=timezone.utc)
     fetching_result = fetch_energy_price_data(
         session=session,
-        cols2fetch=[PriceData.timestamp, PriceData.energy_price],
+        cols2fetch=[PriceData.timestamp, PriceData.values],
         price_metadata_id=1,
         start=start_date,
         end=end_date,

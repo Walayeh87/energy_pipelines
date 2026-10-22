@@ -41,7 +41,7 @@ def _convert_energy_price_to_df(
 
     timestamp_key = PriceData.timestamp.key
     metadata_id_key = PriceData.price_metadata_id.key
-    energy_price_key = PriceData.energy_price.key
+    energy_price_key = PriceData.values.key
 
     timestamp = DataFrame(data_as_dict[EnergyChartsKeys.UNIX_SECONDS])
     timestamp = timestamp.rename(columns={timestamp.columns[0]: timestamp_key})

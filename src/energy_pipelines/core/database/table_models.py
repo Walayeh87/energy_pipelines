@@ -75,14 +75,14 @@ class PriceData(Base):
         nullable=False,
         primary_key=True,
     )
-    energy_price: Mapped[int | float | None] = mapped_column(Numeric, nullable=True)
+    values: Mapped[int | float] = mapped_column(Numeric, nullable=False)
 
     def __repr__(self) -> str:
         return (
             f"{self.__table_args__['schema']}.{self.__tablename__}("
             f"timestamp={self.timestamp}, "
             f"price_metadata_id={self.price_metadata_id}, "
-            f"energy_price={self.energy_price})"
+            f"values={self.values})"
         )
 
 
