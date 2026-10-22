@@ -1,21 +1,17 @@
 import logging
 
-from pandas import Timedelta
 from psycopg import OperationalError
 from sqlalchemy.orm import Session
 
 from energy_pipelines.core.database.connection import create_db_engine, create_db_session
 from energy_pipelines.core.database.data_fetchers_from_db import (
     fetch_bidding_zone_and_price_metadata_id_as_mapper,
-    fetch_price_metadata,
 )
-from energy_pipelines.core.database.data_upsertion import upsert_valid_energy_prices
+from energy_pipelines.core.database.data_upsertion import upsert_energy_prices
 from energy_pipelines.core.ingestion.api_fetcher import fetch_data_from_api
 from energy_pipelines.core.ingestion.url_creation import create_url_for_tomorrows_energy_prices
 from energy_pipelines.core.preprocessing.energy_price_preprocessing import preprocess_price_data
-from energy_pipelines.core.validation.temp_schedule_validator import validate_energy_price
 from energy_pipelines.utils.logging_config import setup_logging
-from energy_pipelines.utils.time_constant import TimeConstant
 
 setup_logging()
 logger = logging.getLogger(__name__)
@@ -58,18 +54,11 @@ def _run_energy_price_pipeline(
         prices_as_dict=prices_as_dict,
         price_metadata_id=price_metadata_id,
     )
-    price_metadata = fetch_price_metadata(session=session, metadata_id=price_metadata_id)
-    expected_schedule_length = int(TimeConstant.SEC_IN_DAY / Timedelta(price_metadata.freq).total_seconds())
-    validation_result = validate_energy_price(
-        energy_price=preprocessed_prices,
-        expected_length=expected_schedule_length,
+    upsert_energy_prices(
+        session=session,
+        prices=preprocessed_prices,
+        update_on_conflict=update_on_conflict,
     )
-    if validation_result.is_valid:
-        upsert_valid_energy_prices(
-            session=session,
-            prices=preprocessed_prices,
-            update_on_conflict=update_on_conflict,
-        )
 
 
 if __name__ == "__main__":
