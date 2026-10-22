@@ -1,7 +1,7 @@
 from datetime import datetime
 from enum import StrEnum
 
-from sqlalchemy import BOOLEAN, BigInteger, DateTime, ForeignKey, Numeric, String, Text
+from sqlalchemy import BOOLEAN, BigInteger, DateTime, ForeignKey, Numeric, SmallInteger, String, Text
 from sqlalchemy.dialects.sqlite import JSONB
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
@@ -83,6 +83,31 @@ class PriceData(Base):
             f"timestamp={self.timestamp}, "
             f"price_metadata_id={self.price_metadata_id}, "
             f"values={self.values})"
+        )
+
+
+class PriceFetchingFailures(Base):
+    __tablename__ = "price_fetching_failures"
+    __table_args__ = {"schema": SchemaNames.ENERGY_PRICES}
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    price_metadata_id: Mapped[int] = mapped_column(
+        BigInteger,
+        ForeignKey(PriceMetadata.price_metadata_id),
+        nullable=False,
+    )
+    http_response_status_code: Mapped[int] = mapped_column(SmallInteger, nullable=False)
+    recording_time: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    error_msg: Mapped[str] = mapped_column(Text, nullable=False)
+
+    def __repr__(self) -> str:
+        return (
+            f"{self.__table_args__['schema']}.{self.__tablename__}("
+            f"id={self.id!r}, "
+            f"price_metadata_id={self.price_metadata_id!r}, "
+            f"http_response_status_code={self.http_response_status_code!r}, "
+            f"recording_time={self.recording_time}, "
+            f"error_msg={self.error_msg!r})"
         )
 
 
