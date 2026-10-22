@@ -2,7 +2,7 @@ from dataclasses import dataclass, fields
 
 from pandas import DataFrame
 
-from energy_pipelines.core.database.table_models import AlgosOutput
+from energy_pipelines.core.database.table_models import AlgosOutput, PriceData
 
 
 @dataclass
@@ -68,3 +68,36 @@ def validate_temp_schedule(
         return TempScheduleValidationResult(is_valid=False, implausible_values=True)
 
     return TempScheduleValidationResult(is_valid=True)
+
+
+@dataclass
+class EnergyPriceValidationResult:
+    # IMPORTANT!
+    # When is_valid is True, the rest must be None.
+    # When is_valid is False, one of the rest must be True, the others are None.
+    # If this behavior changed, consider modifying get_error!
+    is_valid: bool
+    has_length_mismatch: bool | None = None
+
+    timestamps_have_nats: bool | None = None
+    values_have_nans: bool | None = None
+
+
+def get_energy_price_error(result: EnergyPriceValidationResult) -> str:
+    return next(field.name for field in fields(result) if getattr(result, field.name) is True)
+
+
+def validate_energy_price(
+    energy_price: DataFrame,
+    expected_length: int,
+) -> EnergyPriceValidationResult:
+    if len(energy_price) != expected_length:
+        return EnergyPriceValidationResult(is_valid=False, has_length_mismatch=True)
+
+    if energy_price[PriceData.timestamp.key].isna().any():
+        return EnergyPriceValidationResult(is_valid=False, timestamps_have_nats=True)
+
+    if energy_price[PriceData.values.key].isna().any():
+        return EnergyPriceValidationResult(is_valid=False, values_have_nans=True)
+
+    return EnergyPriceValidationResult(is_valid=True)
