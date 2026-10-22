@@ -52,7 +52,7 @@ def process_energy_price_data(
         logger.warning(
             f"No price data found for the specified period:"
             f" {fetching_result.start} to {open_end}"
-            f" for {PriceMetadata.price_metadata_id.key} {fetching_result.price_metadata_id} in "
+            f" for {PriceMetadata.id.key} {fetching_result.price_metadata_id} in "
             f"{SchemaNames.ENERGY_PRICES}.{PriceMetadata.__tablename__}"
         )
         return EnergyPriceProcessingResult(

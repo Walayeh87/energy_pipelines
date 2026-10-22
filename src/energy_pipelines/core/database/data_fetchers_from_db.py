@@ -72,14 +72,14 @@ def fetch_energy_price_data(
 
 
 def fetch_price_metadata(session: Session, metadata_id: int) -> PriceMetadata:
-    all_price_metadata_ids = [pm.price_metadata_id for pm in session.scalars(select(PriceMetadata)).all()]
+    all_price_metadata_ids = [pm.id for pm in session.scalars(select(PriceMetadata)).all()]
     if metadata_id not in all_price_metadata_ids:
         raise ValueError(
             f"price_metadata_id: '{metadata_id}' not found in"
             f" '{SchemaNames.ENERGY_PRICES}.{PriceMetadata.__tablename__}'."
         )
 
-    return session.scalars(select(PriceMetadata).where(PriceMetadata.price_metadata_id == metadata_id)).one()
+    return session.scalars(select(PriceMetadata).where(PriceMetadata.id == metadata_id)).one()
 
 
 def fetch_site(session: Session, site_name: str) -> Site:
@@ -112,9 +112,7 @@ def fetch_price_metadata_id_by_bidding_zone(session: Session, bidding_zone: str)
             f" '{SchemaNames.ENERGY_PRICES}.{PriceMetadata.__tablename__}'."
         )
 
-    return session.scalars(
-        select(PriceMetadata.price_metadata_id).where(PriceMetadata.bidding_zone == bidding_zone)
-    ).one()
+    return session.scalars(select(PriceMetadata.id).where(PriceMetadata.bidding_zone == bidding_zone)).one()
 
 
 def fetch_site_names_by_ids(session: Session, site_ids: list[int] | int) -> list[str]:
@@ -134,7 +132,7 @@ def fetch_all_site_ids_in_site_algos(session: Session) -> list[int]:
 
 
 def fetch_bidding_zone_and_price_metadata_id_as_mapper(session: Session) -> dict[str, int]:
-    mapper = {pm.bidding_zone: pm.price_metadata_id for pm in session.scalars(select(PriceMetadata)).all()}
+    mapper = {pm.bidding_zone: pm.id for pm in session.scalars(select(PriceMetadata)).all()}
     if len(mapper) == 0:
         raise EmptyTableError(f"'{SchemaNames.ENERGY_PRICES}.{PriceMetadata.__tablename__}' is empty.")
 

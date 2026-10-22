@@ -35,7 +35,7 @@ class PriceMetadata(Base):
     __tablename__ = "price_metadata"
     __table_args__ = {"schema": SchemaNames.ENERGY_PRICES}
 
-    price_metadata_id: Mapped[int] = mapped_column(
+    id: Mapped[int] = mapped_column(
         BigInteger,
         primary_key=True,
         autoincrement=True,
@@ -55,7 +55,7 @@ class PriceMetadata(Base):
     def __repr__(self) -> str:
         return (
             f"{self.__table_args__['schema']}.{self.__tablename__}("
-            f"price_metadata_id={self.price_metadata_id!r}, "
+            f"id={self.id!r}, "
             f"bidding_zone={self.bidding_zone!r}, "
             f"freq={self.freq!r}, "
             f"source={self.source!r}, "
@@ -71,7 +71,7 @@ class PriceData(Base):
     timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), primary_key=True)
     price_metadata_id: Mapped[int] = mapped_column(
         BigInteger,
-        ForeignKey(PriceMetadata.price_metadata_id),
+        ForeignKey(PriceMetadata.id),
         nullable=False,
         primary_key=True,
     )
@@ -93,7 +93,7 @@ class PriceFetchingFailures(Base):
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
     price_metadata_id: Mapped[int] = mapped_column(
         BigInteger,
-        ForeignKey(PriceMetadata.price_metadata_id),
+        ForeignKey(PriceMetadata.id),
         nullable=False,
     )
     http_response_status_code: Mapped[int] = mapped_column(SmallInteger, nullable=False)
