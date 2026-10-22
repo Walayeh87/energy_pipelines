@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime
 from typing import Literal
 from zoneinfo import ZoneInfoNotFoundError
 
@@ -20,12 +21,18 @@ from energy_pipelines.core.database.data_fetchers_from_db import (
     fetch_site_algos,
     fetch_site_names_by_ids,
 )
-from energy_pipelines.core.database.data_upsertion import upsert_valid_temp_schedule
+from energy_pipelines.core.database.data_upsertion import (
+    upsert_failing_temp_schedule,
+    upsert_valid_temp_schedule,
+)
 from energy_pipelines.core.database.param_models import (
     ALGO_MODEL_MAPPER,
     TempScheduleCreatorParams,
 )
 from energy_pipelines.core.database.table_models import PriceData, SchemaNames, Site, SiteAlgos
+from energy_pipelines.core.preprocessing.failing_algos_output_preprocessing import (
+    preprocess_failing_temp_schedule,
+)
 from energy_pipelines.core.preprocessing.temp_schedule_preprocessing import (
     preprocess_temp_schedule,
 )
@@ -35,6 +42,7 @@ from energy_pipelines.core.processing.energy_price_processing import (
     process_energy_price_data,
 )
 from energy_pipelines.core.validation.temp_schedule_validator import (
+    get_error,
     validate_backup_temp_schedule,
     validate_temp_schedule,
 )
@@ -164,6 +172,7 @@ def _run_site_pipeline(session: Session, site_name: str, update_on_conflict: boo
                     algo_name=algo_name,
                     site_algo=site_algo,
                     algo_params=algo_params,
+                    energy_price_processing_result=energy_price_processing_result,
                     expected_schedule_length=expected_schedule_length,
                     update_on_conflict=update_on_conflict,
                 )
@@ -211,11 +220,26 @@ def _handle_normal_case_for_temp_schedule_creator(
         min_temp=algo_params.temps["min_temp"],
         max_temp=algo_params.temps["max_temp"],
     )
-    upsert_valid_temp_schedule(
-        session=session,
-        temp_schedule=preprocessed_temp_schedule,
-        update_on_conflict=update_on_conflict,
-    )
+    if validation_result.is_valid:
+        upsert_valid_temp_schedule(
+            session=session,
+            temp_schedule=preprocessed_temp_schedule,
+            update_on_conflict=update_on_conflict,
+        )
+    else:
+        preprocessed_failing_algos_output = preprocess_failing_temp_schedule(
+            site_id=site.id,
+            algo_id=site_algo.algo_id,
+            temp_schedule=preprocessed_temp_schedule,
+            reporting_time_in_local_tz=datetime.now(),
+            failing_reason=get_error(result=validation_result),
+            energy_price_processing_result=energy_price_processing_result,
+            is_backup=False,
+        )
+        upsert_failing_temp_schedule(
+            session=session,
+            preprocessed_failing_algos_output=preprocessed_failing_algos_output,
+        )
 
 
 def _handle_backup_case_for_temp_schedule_creator(
@@ -224,6 +248,7 @@ def _handle_backup_case_for_temp_schedule_creator(
     algo_name: str,
     site_algo: SiteAlgos,
     algo_params: TempScheduleCreatorParams,
+    energy_price_processing_result: EnergyPriceProcessingResult,
     expected_schedule_length: int,
     update_on_conflict: bool,
 ) -> None:
@@ -247,11 +272,26 @@ def _handle_backup_case_for_temp_schedule_creator(
         expected_length=expected_schedule_length,
         default_temp=algo_params.temps["default_temp"],
     )
-    upsert_valid_temp_schedule(
-        session=session,
-        temp_schedule=preprocessed_backup_temp_schedule,
-        update_on_conflict=update_on_conflict,
-    )
+    if backup_validation_result.is_valid:
+        upsert_valid_temp_schedule(
+            session=session,
+            temp_schedule=preprocessed_backup_temp_schedule,
+            update_on_conflict=update_on_conflict,
+        )
+    else:
+        preprocessed_failing_algos_output = preprocess_failing_temp_schedule(
+            site_id=site.id,
+            algo_id=site_algo.algo_id,
+            temp_schedule=preprocessed_backup_temp_schedule,
+            reporting_time_in_local_tz=datetime.now(),
+            failing_reason=get_error(result=backup_validation_result),
+            energy_price_processing_result=energy_price_processing_result,
+            is_backup=True,
+        )
+        upsert_failing_temp_schedule(
+            session=session,
+            preprocessed_failing_algos_output=preprocessed_failing_algos_output,
+        )
 
 
 if __name__ == "__main__":

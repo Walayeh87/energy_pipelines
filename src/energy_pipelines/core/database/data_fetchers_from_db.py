@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
 
-from pandas._libs.tslibs.offsets import Timedelta
+from pandas import Timedelta
 from sqlalchemy import select
 from sqlalchemy.orm import InstrumentedAttribute, Session
 

@@ -6,7 +6,7 @@ from sqlalchemy import exists, select, tuple_
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session
 
-from energy_pipelines.core.database.table_models import AlgosOutput, PriceData
+from energy_pipelines.core.database.table_models import AlgosOutput, FailingAlgosOutput, PriceData
 
 logger = logging.getLogger(__name__)
 
@@ -14,6 +14,7 @@ logger = logging.getLogger(__name__)
 def upsert_energy_prices(session: Session, prices: DataFrame, update_on_conflict: bool) -> None:
     stmt = insert(PriceData).values(prices.to_dict(orient="records"))
 
+    # try psycopg.OperationalError
     price_exists = _check_price_existence(
         session=session,
         timestamps=prices[PriceData.timestamp.key],
@@ -134,3 +135,17 @@ def _check_temp_schedule_existence(
     )
 
     return bool(session.scalar(stmt))
+
+
+def upsert_failing_temp_schedule(
+    session: Session,
+    preprocessed_failing_algos_output: DataFrame,
+) -> None:
+    stmt = insert(FailingAlgosOutput).values(preprocessed_failing_algos_output.to_dict(orient="records"))
+
+    try:
+        session.execute(stmt)
+        session.commit()
+    except Exception as e:
+        session.rollback()
+        raise Exception("An error occurred while trying to upsert temperature schedule values.") from e
