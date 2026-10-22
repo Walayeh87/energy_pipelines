@@ -76,12 +76,14 @@ def temp_schedule_pipeline(
     if isinstance(site_ids, int):
         site_ids = [site_ids]
 
+    site_ids_copy = site_ids.copy()
     for site_id in site_ids:
         if site_id not in all_site_ids:
             logger.warning(
                 f"site_id: {site_id} not found in '{SchemaNames.SITES}.{Site.__tablename__}'."
                 f" No schedule will be created for this site."
             )
+            site_ids_copy.remove(site_id)
 
     site_names = fetch_site_names_by_ids(session=session, site_ids=site_ids)
 
@@ -96,7 +98,6 @@ def temp_schedule_pipeline(
         logger.info(f"Start temperature schedule upsertion process for site '{site_name}'.")
         try:
             _run_site_pipeline(session=session, site_name=site_name, update_on_conflict=update_on_conflict)
-
         except (ValueError, EmptyTableError, ZoneInfoNotFoundError) as e:
             logger.exception(
                 f"{type(e).__name__} occurred while creating a schedule for site '{site_name}': {e}"
@@ -187,7 +188,7 @@ def _run_site_pipeline(session: Session, site_name: str, update_on_conflict: boo
                     expected_schedule_length=expected_schedule_length,
                     update_on_conflict=update_on_conflict,
                 )
-        # Further temperature schedule creator versions can be added here with an elif statement.
+        # Further temperature schedule creators/versions can be added here with an elif statement.
         else:
             logger.warning(f"The algo model: '{algo_model}' is not available.")
 
@@ -294,5 +295,10 @@ def _handle_backup_case_for_temp_schedule_creator(
         )
 
 
+SITE_MAPPER = {"First Site": 3, "Second Site": 4, "Third Site": 9}  # It should be updated manually
+
+
 if __name__ == "__main__":
-    temp_schedule_pipeline("all_site_ids")
+    temp_schedule_pipeline(site_ids="all_site_ids")
+    # The SITE_MAPPER can be used to provide the site IDs in a user-friendly way.
+    # temp_schedule_pipeline(site_ids=[SITE_MAPPER["First Site"]])
