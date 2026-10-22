@@ -3,17 +3,8 @@ pandas==2.3.3
 pytest==9.0.2
 ruff==0.14.9
 
-pyside6
-plotly
-pycountry
-holidays
-pint
 requests
-python-dotenv
-fastapi
-httpx2
 psycopg
-pytz
 sqlalchemy
 uliweb-alembic
 pydantic
