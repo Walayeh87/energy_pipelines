@@ -20,7 +20,7 @@ class FetchDataFromApiResult:
 
 def fetch_data_from_api(
     url: str,
-    max_attempts: int = 200,
+    max_attempts: int = 5,
     retry_delay_in_s: int = 30,
     request_timeout_in_s: int = 30,
 ) -> FetchDataFromApiResult:
@@ -47,12 +47,12 @@ def fetch_data_from_api(
     if request_timeout_in_s < 1:
         raise ValueError(f"request_timeout_in_s must be at least 1 second. Got {request_timeout_in_s}")
 
-    if retry_delay_in_s * max_attempts > 2 * TimeConstant.SEC_IN_H:
-        raise ValueError("Total retry time exceeds 2 hours. Adjust retry parameters.")
+    if retry_delay_in_s * max_attempts > TimeConstant.SEC_IN_H:
+        raise ValueError("Total retry time exceeds 1 hour. Adjust retry parameters.")
 
     for attempt in range(1, max_attempts + 1):
+        response = requests.get(url, timeout=request_timeout_in_s)
         try:
-            response = requests.get(url, timeout=request_timeout_in_s)
             response.raise_for_status()  # Raises HTTPError for 4xx/5xx
             data_as_dict = response.json()
 
