@@ -79,12 +79,15 @@ def upsert_valid_temp_schedule(
 ) -> None:
     stmt = insert(AlgosOutput).values(temp_schedule.to_dict(orient="records"))
 
-    schedule_exists = _check_temp_schedule_existence(
-        session=session,
-        timestamps=temp_schedule[AlgosOutput.timestamp.key],
-        site_ids=temp_schedule[AlgosOutput.site_id.key],
-        algo_ids=temp_schedule[AlgosOutput.algo_id.key],
-    )
+    try:
+        schedule_exists = _check_temp_schedule_existence(
+            session=session,
+            timestamps=temp_schedule[AlgosOutput.timestamp.key],
+            site_ids=temp_schedule[AlgosOutput.site_id.key],
+            algo_ids=temp_schedule[AlgosOutput.algo_id.key],
+        )
+    except OperationalError as e:
+        raise OperationalError(f"An error occurred while checking temperature schedule existence: {e}") from e
 
     if schedule_exists:
         logger.info("Some/all temperature schedule values already exist in the database.")
