@@ -15,7 +15,7 @@ def create_db_engine() -> Engine:
         raise ConnectionError("Database URL is not set.")
 
     try:
-        db_engine = create_engine(DB_URL)
+        db_engine = create_engine(DB_URL, pool_pre_ping=True)
     except NoSuchModuleError as e:
         logger.error(f"DB_URL is incorrect. Please check your environment variables. Details: {e}")
         raise
