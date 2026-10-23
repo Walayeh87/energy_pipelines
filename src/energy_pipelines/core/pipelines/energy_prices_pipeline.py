@@ -38,7 +38,7 @@ def daily_energy_price_pipeline(update_on_conflict: bool = False) -> None:
                 update_on_conflict=update_on_conflict,
             )
 
-        except (ValueError, OperationalError, RuntimeError) as e:
+        except (ValueError, OperationalError) as e:
             logger.exception(f"{type(e).__name__} occurred while upserting energy prices: {e}")
 
         except Exception as e:

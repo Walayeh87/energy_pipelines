@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from typing import Any
 
 import requests
-from requests import RequestException
+from requests import ReadTimeout, RequestException
 
 from energy_pipelines.utils.time_constant import TimeConstant
 
@@ -51,8 +51,8 @@ def fetch_data_from_api(
         raise ValueError("Total retry time exceeds 1 hour. Adjust retry parameters.")
 
     for attempt in range(1, max_attempts + 1):
-        response = requests.get(url, timeout=request_timeout_in_s)
         try:
+            response = requests.get(url, timeout=request_timeout_in_s)
             response.raise_for_status()  # Raises HTTPError for 4xx/5xx
             data_as_dict = response.json()
 
@@ -66,6 +66,16 @@ def fetch_data_from_api(
                 http_response_status_code=response.status_code,
                 error_msg="No error detected.",
             )
+
+        except ReadTimeout as e:
+            if attempt == max_attempts:
+                return FetchDataFromApiResult(
+                    data_as_dict={},
+                    http_response_status_code=response.status_code,
+                    error_msg=str(e),
+                )
+            logger.warning(f"Attempt {attempt} failed: {e}. Retrying...")
+            # No need to time.sleep(), as it is already waited for request_timeout_in_s s.
 
         except RequestException as e:
             if attempt == max_attempts:
