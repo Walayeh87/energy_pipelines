@@ -1,6 +1,5 @@
 import logging
 from dataclasses import dataclass
-from datetime import datetime, timezone
 from enum import StrEnum
 
 import pandas as pd
@@ -13,10 +12,8 @@ from tspropy import (
     split_df_into_list_of_phases,
 )
 
-from energy_pipelines.core.database.connection import create_db_engine, create_db_session
 from energy_pipelines.core.database.data_fetchers_from_db import (
     DTFetchingResult,
-    fetch_energy_price_data,
 )
 from energy_pipelines.core.database.table_models import PriceData, PriceMetadata, SchemaNames
 
@@ -166,20 +163,3 @@ def _fill_outer_missing_energy_prices(prices: DataFrame) -> DataFrame:
     filled_prices = filled_prices.astype(float).bfill()
 
     return filled_prices
-
-
-if __name__ == "__main__":
-    db_engine = create_db_engine()
-    session = create_db_session(db_engine)
-
-    start_date = datetime(2026, 10, 15, tzinfo=timezone.utc)
-    end_date = datetime(2026, 10, 2, tzinfo=timezone.utc)
-    fetching_result = fetch_energy_price_data(
-        session=session,
-        cols2fetch=[PriceData.timestamp, PriceData.values],
-        price_metadata_id=1,
-        start=start_date,
-        end=end_date,
-    )
-
-    result = process_energy_price_data(fetching_result=fetching_result, price_tz="UTC", price_freq="15min")
