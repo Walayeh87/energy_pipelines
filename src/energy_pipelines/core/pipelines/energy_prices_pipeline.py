@@ -19,7 +19,6 @@ from energy_pipelines.core.preprocessing.energy_price_preprocessing import (
 )
 from energy_pipelines.utils.logging_config import setup_logging
 
-setup_logging()
 logger = logging.getLogger(__name__)
 
 
@@ -93,4 +92,5 @@ def _run_bidding_zone_pipeline(
 
 
 if __name__ == "__main__":
+    setup_logging()
     energy_price_pipeline(db_url=DB_URL, update_on_conflict=False)

@@ -53,7 +53,6 @@ from energy_pipelines.utils.logging_config import setup_logging
 from energy_pipelines.utils.time_constant import TimeConstant
 from energy_pipelines.utils.time_helpers import get_tomorrows_date, get_tz_diff_in_h
 
-setup_logging()
 logger = logging.getLogger(__name__)
 
 
@@ -324,6 +323,8 @@ def _handle_backup_case_for_temp_schedule_creator(
 
 
 if __name__ == "__main__":
+    setup_logging()
+
     temp_schedule_pipeline(db_url=DB_URL, site_ids="all_site_ids", update_on_conflict=False)
     # The SITE_MAPPER can be used to provide the site IDs in a user-friendly way.
     # from energy_pipelines.core.config.manual_mappers import SITE_MAPPER
