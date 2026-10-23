@@ -216,17 +216,16 @@ class FailingAlgosOutput(Base):
     __tablename__ = "failing_algos_output"
     __table_args__ = {"schema": SchemaNames.ALGOS}
 
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
     site_id: Mapped[int] = mapped_column(
         BigInteger,
         ForeignKey(Site.id, ondelete="NO ACTION"),
-        primary_key=True,
     )
     algo_id: Mapped[int] = mapped_column(
         BigInteger,
         ForeignKey(Algo.id, ondelete="NO ACTION"),
-        primary_key=True,
     )
-    timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, primary_key=True)
+    timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     values: Mapped[int | float] = mapped_column(Numeric, nullable=True)
     failing_reason: Mapped[str] = mapped_column(String(50), nullable=False)
     reporting_time: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
