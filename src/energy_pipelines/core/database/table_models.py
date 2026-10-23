@@ -98,7 +98,7 @@ class PriceFetchingFailures(Base):
         ForeignKey(PriceMetadata.id),
         nullable=False,
     )
-    http_response_status_code: Mapped[int] = mapped_column(SmallInteger, nullable=False)
+    http_response_status_code: Mapped[int | None] = mapped_column(SmallInteger, nullable=True)
     reporting_time: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     error_msg: Mapped[str] = mapped_column(Text, nullable=False)
 

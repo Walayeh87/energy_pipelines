@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class FetchDataFromApiResult:
     data_as_dict: dict[str, Any]
-    http_response_status_code: int
+    http_response_status_code: int | None
     error_msg: str
 
 
@@ -51,8 +51,10 @@ def fetch_data_from_api(
         raise ValueError("Total retry time exceeds 1 hour. Adjust retry parameters.")
 
     for attempt in range(1, max_attempts + 1):
+        status_code = None
         try:
             response = requests.get(url, timeout=request_timeout_in_s)
+            status_code = response.status_code
             response.raise_for_status()  # Raises HTTPError for 4xx/5xx
             data_as_dict = response.json()
 
@@ -71,7 +73,7 @@ def fetch_data_from_api(
             if attempt == max_attempts:
                 return FetchDataFromApiResult(
                     data_as_dict={},
-                    http_response_status_code=response.status_code,
+                    http_response_status_code=status_code,
                     error_msg=str(e),
                 )
             logger.warning(f"Attempt {attempt} failed: {e}. Retrying...")
@@ -81,7 +83,7 @@ def fetch_data_from_api(
             if attempt == max_attempts:
                 return FetchDataFromApiResult(
                     data_as_dict={},
-                    http_response_status_code=response.status_code,
+                    http_response_status_code=status_code,
                     error_msg=str(e),
                 )
 

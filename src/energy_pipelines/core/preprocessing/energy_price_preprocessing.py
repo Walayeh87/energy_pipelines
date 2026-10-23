@@ -28,7 +28,7 @@ def preprocess_price_data(
 
 def preprocess_price_fetching_failures(
     price_metadata_id: int,
-    http_response_status_code: int,
+    http_response_status_code: int | None,
     recording_time: datetime,
     error_msg: str,
 ) -> DataFrame:
