@@ -14,6 +14,3 @@ class TempScheduleCreatorParams(BaseModel):
 
     temps: ScheduleSettingTemps
     freq: str
-
-
-ALGO_MODEL_MAPPER = {1: TempScheduleCreatorParams}
