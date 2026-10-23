@@ -57,7 +57,7 @@ def upsert_energy_prices(session: Session, prices: DataFrame, update_on_conflict
         session.execute(stmt)
         session.commit()
     except Exception as e:
-        raise Exception("An error occurred while trying to upsert temperature schedule values.") from e
+        raise Exception("An error occurred while trying to upsert energy prices.") from e
 
 
 def upsert_price_fetching_failures(
@@ -72,6 +72,8 @@ def upsert_price_fetching_failures(
     except Exception as e:
         session.rollback()
         raise Exception("An error occurred while trying to upsert price fetching failures.") from e
+
+    logger.info("Price fetching failures have been upserted successfully.")
 
 
 def upsert_valid_temp_schedule(
@@ -119,7 +121,7 @@ def upsert_valid_temp_schedule(
         session.commit()
     except Exception as e:
         session.rollback()
-        raise Exception("An error occurred while trying to upsert temperature schedule values.") from e
+        raise Exception("An error occurred while trying to upsert temperature schedule.") from e
 
 
 def upsert_failing_temp_schedule(
@@ -133,7 +135,9 @@ def upsert_failing_temp_schedule(
         session.commit()
     except Exception as e:
         session.rollback()
-        raise Exception("An error occurred while trying to upsert temperature schedule values.") from e
+        raise Exception("An error occurred while trying to upsert failing temperature schedule.") from e
+
+    logger.info("Failing temperature schedule values have been upserted successfully.")
 
 
 def _check_records_existence(
