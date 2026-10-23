@@ -5,6 +5,7 @@ from zoneinfo import ZoneInfo
 from psycopg import OperationalError
 from sqlalchemy.orm import Session
 
+from energy_pipelines.core.config.settings import DB_URL
 from energy_pipelines.core.database.connection import create_db_engine, create_db_session
 from energy_pipelines.core.database.data_fetchers_from_db import (
     fetch_bidding_zone_and_price_metadata_id_as_mapper,
@@ -22,8 +23,8 @@ setup_logging()
 logger = logging.getLogger(__name__)
 
 
-def energy_price_pipeline(update_on_conflict: bool = False) -> None:
-    db_engine = create_db_engine()
+def energy_price_pipeline(db_url: str, update_on_conflict: bool = False) -> None:
+    db_engine = create_db_engine(db_url=db_url)
 
     try:
         with create_db_session(db_engine=db_engine) as session:
@@ -92,4 +93,4 @@ def _run_bidding_zone_pipeline(
 
 
 if __name__ == "__main__":
-    energy_price_pipeline(update_on_conflict=False)
+    energy_price_pipeline(db_url=DB_URL, update_on_conflict=False)

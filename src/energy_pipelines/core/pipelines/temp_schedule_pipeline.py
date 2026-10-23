@@ -12,6 +12,7 @@ from energy_pipelines.core.algos.temp_schedule_creator import (
     create_temp_schedule,
 )
 from energy_pipelines.core.config.manual_mappers import ALGO_MODEL_MAPPER
+from energy_pipelines.core.config.settings import DB_URL
 from energy_pipelines.core.database.connection import create_db_engine, create_db_session
 from energy_pipelines.core.database.data_fetchers_from_db import (
     fetch_algo_name,
@@ -60,10 +61,11 @@ ALL_SITE_IDS = Literal["all_site_ids"]
 
 
 def temp_schedule_pipeline(
+    db_url: str,
     site_ids: list[int] | int | ALL_SITE_IDS = "all_site_ids",
     update_on_conflict: bool = False,
 ) -> None:
-    db_engine = create_db_engine()
+    db_engine = create_db_engine(db_url=db_url)
 
     try:
         with create_db_session(db_engine=db_engine) as session:
@@ -322,8 +324,8 @@ def _handle_backup_case_for_temp_schedule_creator(
 
 
 if __name__ == "__main__":
-    temp_schedule_pipeline(site_ids="all_site_ids")
+    temp_schedule_pipeline(db_url=DB_URL, site_ids="all_site_ids", update_on_conflict=False)
     # The SITE_MAPPER can be used to provide the site IDs in a user-friendly way.
     # from energy_pipelines.core.config.manual_mappers import SITE_MAPPER
     #
-    # temp_schedule_pipeline(site_ids=[SITE_MAPPER["First Site"]])
+    # temp_schedule_pipeline(db_url=DB_URL, site_ids=[SITE_MAPPER["First Site"]])

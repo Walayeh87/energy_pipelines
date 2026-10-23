@@ -4,18 +4,12 @@ from sqlalchemy import Engine, create_engine
 from sqlalchemy.exc import NoSuchModuleError
 from sqlalchemy.orm import Session, sessionmaker
 
-from energy_pipelines.core.config.settings import DB_URL
-
 logger = logging.getLogger(__name__)
 
 
-def create_db_engine() -> Engine:
-    if DB_URL is None:
-        logger.error("Database URL is not set. Please check your environment variables.")
-        raise ConnectionError("Database URL is not set.")
-
+def create_db_engine(db_url: str) -> Engine:
     try:
-        db_engine = create_engine(DB_URL, pool_pre_ping=True)
+        db_engine = create_engine(db_url, pool_pre_ping=True)
     except NoSuchModuleError as e:
         logger.error(f"DB_URL is incorrect. Please check your environment variables. Details: {e}")
         raise
