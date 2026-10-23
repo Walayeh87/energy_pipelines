@@ -56,12 +56,12 @@ from energy_pipelines.utils.time_helpers import get_tomorrows_date, get_tz_diff_
 logger = logging.getLogger(__name__)
 
 
-ALL_SITE_IDS = Literal["all_site_ids"]
+ALL_SITE_IDS = "all_site_ids"
 
 
 def temp_schedule_pipeline(
     db_url: str,
-    site_ids: list[int] | int | ALL_SITE_IDS = "all_site_ids",
+    site_ids: list[int] | int | Literal["all_site_ids"],
     update_on_conflict: bool = False,
 ) -> None:
     db_engine = create_db_engine(db_url=db_url)
@@ -84,10 +84,10 @@ def _run_temp_schedule_pipeline(
 ) -> None:
     all_site_ids = fetch_all_site_ids_in_site_algos(session=session)
 
-    if isinstance(site_ids, str) and site_ids != ALL_SITE_IDS.__args__[0]:
+    if isinstance(site_ids, str) and site_ids != ALL_SITE_IDS:
         raise ValueError(f"Invalid site_ids provided: {site_ids}")
 
-    if isinstance(site_ids, str) and site_ids == ALL_SITE_IDS.__args__[0]:
+    if isinstance(site_ids, str) and site_ids == ALL_SITE_IDS:
         site_ids = all_site_ids
 
     if isinstance(site_ids, int):
