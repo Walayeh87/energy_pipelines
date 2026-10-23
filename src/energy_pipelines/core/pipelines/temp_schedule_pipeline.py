@@ -82,6 +82,33 @@ def _run_temp_schedule_pipeline(
     site_ids: list[int] | int | ALL_SITE_IDS,
     update_on_conflict: bool,
 ) -> None:
+    site_ids = _process_site_ids(session=session, site_ids=site_ids)
+    site_names = fetch_site_names_by_ids(session=session, site_ids=site_ids)
+
+    if len(site_names) == 0:
+        logger.warning(
+            f"All provided site_ids: {site_ids} not found in '{SchemaNames.SITES}.{Site.__tablename__}'."
+        )
+        return
+
+    for site_name in site_names:
+        logger.info(f"Start temperature schedule upsertion process for site '{site_name}'.")
+        try:
+            _run_site_pipeline(session=session, site_name=site_name, update_on_conflict=update_on_conflict)
+        except (ValueError, EmptyTableError, ZoneInfoNotFoundError) as e:
+            logger.exception(
+                f"{type(e).__name__} occurred while creating a schedule for site '{site_name}': {e}"
+            )
+
+        except Exception as e:
+            logger.exception(
+                f"Unexpected error occurred while creating a schedule for site '{site_name}': {e}"
+            )
+
+    logger.info("Temperature schedule process has been completed.")
+
+
+def _process_site_ids(session: Session, site_ids: list[int] | int | ALL_SITE_IDS) -> list[int]:
     all_site_ids = fetch_all_site_ids_in_site_algos(session=session)
 
     if isinstance(site_ids, str) and site_ids != ALL_SITE_IDS:
@@ -102,35 +129,7 @@ def _run_temp_schedule_pipeline(
             )
             site_ids_copy.remove(site_id)
 
-    site_names = fetch_site_names_by_ids(session=session, site_ids=site_ids)
-
-    if len(site_names) == 0:
-        logger.warning(
-            f"All provided site_ids: {site_ids} not found in '{SchemaNames.SITES}.{Site.__tablename__}'."
-        )
-        return
-
-    failed_sites = []
-    for site_name in site_names:
-        logger.info(f"Start temperature schedule upsertion process for site '{site_name}'.")
-        try:
-            _run_site_pipeline(session=session, site_name=site_name, update_on_conflict=update_on_conflict)
-        except (ValueError, EmptyTableError, ZoneInfoNotFoundError) as e:
-            logger.exception(
-                f"{type(e).__name__} occurred while creating a schedule for site '{site_name}': {e}"
-            )
-            failed_sites.append(site_name)
-
-        except Exception as e:
-            logger.exception(
-                f"Unexpected error occurred while creating a schedule for site '{site_name}': {e}"
-            )
-            failed_sites.append(site_name)
-
-    if failed_sites:
-        logger.warning(f"Failed to create temperature schedules for the site(s): {failed_sites}")
-
-    logger.info("Temperature schedule process has been completed.")
+    return site_ids
 
 
 def _run_site_pipeline(session: Session, site_name: str, update_on_conflict: bool) -> None:
