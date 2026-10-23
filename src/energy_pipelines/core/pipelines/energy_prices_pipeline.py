@@ -91,6 +91,10 @@ def _run_bidding_zone_pipeline(
         )
 
 
-if __name__ == "__main__":
+def main() -> None:
     setup_logging()
     energy_price_pipeline(db_url=DB_URL, update_on_conflict=False)
+
+
+if __name__ == "__main__":
+    main()

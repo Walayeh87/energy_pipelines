@@ -322,7 +322,7 @@ def _handle_backup_case_for_temp_schedule_creator(
         )
 
 
-if __name__ == "__main__":
+def main() -> None:
     setup_logging()
 
     temp_schedule_pipeline(db_url=DB_URL, site_ids="all_site_ids", update_on_conflict=False)
@@ -330,3 +330,7 @@ if __name__ == "__main__":
     # from energy_pipelines.core.config.manual_mappers import SITE_MAPPER
     #
     # temp_schedule_pipeline(db_url=DB_URL, site_ids=[SITE_MAPPER["First Site"]])
+
+
+if __name__ == "__main__":
+    main()
