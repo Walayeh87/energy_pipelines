@@ -2,7 +2,7 @@ from datetime import datetime
 from enum import StrEnum
 
 from sqlalchemy import BOOLEAN, BigInteger, DateTime, ForeignKey, Numeric, SmallInteger, String, Text
-from sqlalchemy.dialects.sqlite import JSONB
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
