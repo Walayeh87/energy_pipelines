@@ -64,8 +64,23 @@ def temp_schedule_pipeline(
     update_on_conflict: bool = False,
 ) -> None:
     db_engine = create_db_engine()
-    session = create_db_session(db_engine=db_engine)
 
+    try:
+        with create_db_session(db_engine=db_engine) as session:
+            _run_temp_schedule_pipeline(
+                session=session,
+                site_ids=site_ids,
+                update_on_conflict=update_on_conflict,
+            )
+    finally:
+        db_engine.dispose()
+
+
+def _run_temp_schedule_pipeline(
+    session: Session,
+    site_ids: list[int] | int | ALL_SITE_IDS,
+    update_on_conflict: bool,
+) -> None:
     all_site_ids = fetch_all_site_ids_in_site_algos(session=session)
 
     if isinstance(site_ids, str) and site_ids != ALL_SITE_IDS.__args__[0]:

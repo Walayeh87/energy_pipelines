@@ -24,14 +24,21 @@ logger = logging.getLogger(__name__)
 
 def daily_energy_price_pipeline(update_on_conflict: bool = False) -> None:
     db_engine = create_db_engine()
-    session = create_db_session(db_engine=db_engine)
 
+    try:
+        with create_db_session(db_engine=db_engine) as session:
+            _run_daily_energy_price_pipeline(session=session, update_on_conflict=update_on_conflict)
+    finally:
+        db_engine.dispose()
+
+
+def _run_daily_energy_price_pipeline(session: Session, update_on_conflict: bool) -> None:
     mapper = fetch_bidding_zone_and_price_metadata_id_as_mapper(session=session)
 
     for bidding_zone, price_metadata_id in mapper.items():
         try:
             logger.info(f"Start daily upserting process for bidding zone '{bidding_zone}'.")
-            _run_energy_price_pipeline(
+            _run_energy_price_pipeline_per_bidding_zone(
                 session=session,
                 price_metadata_id=price_metadata_id,
                 bidding_zone=bidding_zone,
@@ -47,7 +54,7 @@ def daily_energy_price_pipeline(update_on_conflict: bool = False) -> None:
     logger.info("Daily upserting process completed.")
 
 
-def _run_energy_price_pipeline(
+def _run_energy_price_pipeline_per_bidding_zone(
     session: Session,
     price_metadata_id: int,
     bidding_zone: str,
