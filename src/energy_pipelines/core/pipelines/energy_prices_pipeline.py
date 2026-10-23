@@ -81,7 +81,6 @@ def _run_energy_price_pipeline(
         upsert_price_fetching_failures(
             session=session,
             price_fetching_failures=preprocessed_price_fetching_failures,
-            update_on_conflict=update_on_conflict,
         )
 
 

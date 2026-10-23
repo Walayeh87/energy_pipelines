@@ -63,22 +63,8 @@ def upsert_energy_prices(session: Session, prices: DataFrame, update_on_conflict
 def upsert_price_fetching_failures(
     session: Session,
     price_fetching_failures: DataFrame,
-    update_on_conflict: bool,
 ) -> None:
     stmt = insert(PriceFetchingFailures).values(price_fetching_failures.to_dict(orient="records"))
-
-    stmt = _handle_upsertion_policy(
-        stmt=stmt,
-        records2insert=price_fetching_failures,
-        records_exist=False,
-        primary_keys=[PriceFetchingFailures.id.key],
-        cols2exclude_as_mapper={
-            column.name: getattr(stmt.excluded, column.name)
-            for column in PriceFetchingFailures.__table__.columns
-            if not column.primary_key
-        },
-        update_on_conflict=update_on_conflict,
-    )
 
     try:
         session.execute(stmt)
@@ -178,9 +164,9 @@ def _handle_upsertion_policy(
         stmt = stmt.on_conflict_do_update(index_elements=primary_keys, set_=cols2exclude_as_mapper)
 
         if records_exist:
-            logger.info(f"{len(records2insert)} rows will be updated in the database successfully.")
+            logger.info(f"{len(records2insert)} rows will be updated in the database.")
         else:
-            logger.info(f"{len(records2insert)} rows will be upserted into the database successfully.")
+            logger.info(f"{len(records2insert)} rows will be upserted into the database.")
     else:
         stmt = stmt.on_conflict_do_nothing(index_elements=primary_keys)
 
@@ -190,6 +176,6 @@ def _handle_upsertion_policy(
                 " If you want to update them, set the parameter 'update_on_conflict' to True."
             )
         else:
-            logger.info(f"{len(records2insert)} rows will be upserted into the database successfully.")
+            logger.info(f"{len(records2insert)} rows will be upserted into the database.")
 
     return stmt
