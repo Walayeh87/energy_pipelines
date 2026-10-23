@@ -1,4 +1,5 @@
 from datetime import datetime
+from uuid import UUID
 
 from pandas.core.frame import DataFrame
 
@@ -7,6 +8,7 @@ from energy_pipelines.core.processing.energy_price_processing import EnergyPrice
 
 
 def preprocess_failing_temp_schedule(
+    failure_id: UUID,
     site_id: int,
     algo_id: int,
     temp_schedule: DataFrame,
@@ -17,6 +19,7 @@ def preprocess_failing_temp_schedule(
 ) -> DataFrame:
     failing_algos_output = DataFrame(index=temp_schedule.index)
 
+    failing_algos_output[FailingAlgosOutput.failure_id.key] = failure_id
     failing_algos_output[FailingAlgosOutput.site_id.key] = site_id
     failing_algos_output[FailingAlgosOutput.algo_id.key] = algo_id
 

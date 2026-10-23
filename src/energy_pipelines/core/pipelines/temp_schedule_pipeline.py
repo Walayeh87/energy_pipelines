@@ -1,6 +1,7 @@
 import logging
 from datetime import datetime
 from typing import Literal
+from uuid import uuid4
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from pandas import Timedelta
@@ -229,6 +230,7 @@ def _handle_normal_case_for_temp_schedule_creator(
         )
     else:
         preprocessed_failing_algos_output = preprocess_failing_temp_schedule(
+            failure_id=uuid4(),
             site_id=site.id,
             algo_id=site_algo.algo_id,
             temp_schedule=preprocessed_temp_schedule,
@@ -281,6 +283,7 @@ def _handle_backup_case_for_temp_schedule_creator(
         )
     else:
         preprocessed_failing_algos_output = preprocess_failing_temp_schedule(
+            failure_id=uuid4(),
             site_id=site.id,
             algo_id=site_algo.algo_id,
             temp_schedule=preprocessed_backup_temp_schedule,

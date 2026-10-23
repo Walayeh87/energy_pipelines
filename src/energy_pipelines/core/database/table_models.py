@@ -1,8 +1,10 @@
 from datetime import datetime
 from enum import StrEnum
+from uuid import UUID, uuid4
 
 from sqlalchemy import BOOLEAN, BigInteger, DateTime, ForeignKey, Numeric, SmallInteger, String, Text
 from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
@@ -217,6 +219,12 @@ class FailingAlgosOutput(Base):
     __table_args__ = {"schema": SchemaNames.ALGOS}
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    failure_id: Mapped[UUID] = mapped_column(
+        PG_UUID(as_uuid=True),
+        nullable=False,
+        index=True,
+        default=uuid4,
+    )
     site_id: Mapped[int] = mapped_column(
         BigInteger,
         ForeignKey(Site.id, ondelete="NO ACTION"),
