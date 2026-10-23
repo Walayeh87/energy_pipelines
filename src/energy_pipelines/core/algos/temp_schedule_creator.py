@@ -11,11 +11,9 @@ def create_temp_schedule(
     max_temp: int | float,
     default_temp: int | float,
 ) -> DataFrame:
+    # No need to check empty prices since this case is handled in temp_schedule_pipeline.py
     if min_temp > max_temp:
         raise ValueError("min_temp must be <= max_temp.")
-
-    if prices.empty:
-        return DataFrame([default_temp], index=prices.index)
 
     if not np.isfinite(prices.to_numpy(dtype=float)).all():
         raise ValueError("Energy prices must be finite numeric values.")
