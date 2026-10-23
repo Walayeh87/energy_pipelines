@@ -72,7 +72,7 @@ def fetch_energy_price_data(
 
 
 def fetch_price_metadata(session: Session, metadata_id: int) -> PriceMetadata:
-    all_price_metadata_ids = [pm.id for pm in session.scalars(select(PriceMetadata)).all()]
+    all_price_metadata_ids = session.scalars(select(PriceMetadata.id)).all()
     if metadata_id not in all_price_metadata_ids:
         raise ValueError(
             f"price_metadata_id: '{metadata_id}' not found in"
@@ -83,7 +83,7 @@ def fetch_price_metadata(session: Session, metadata_id: int) -> PriceMetadata:
 
 
 def fetch_site(session: Session, site_name: str) -> Site:
-    if site_name not in [site.name for site in session.scalars(select(Site)).all()]:
+    if site_name not in session.scalars(select(Site.name)).all():
         raise ValueError(
             f"Site with name '{site_name}' not found in '{SchemaNames.SITES}.{Site.__tablename__}'."
         )
@@ -124,7 +124,7 @@ def fetch_site_names_by_ids(session: Session, site_ids: list[int] | int) -> list
 
 
 def fetch_all_site_ids_in_site_algos(session: Session) -> list[int]:
-    site_ids = set(site_algo.site_id for site_algo in session.scalars(select(SiteAlgos)).all())
+    site_ids = set(session.scalars(select(SiteAlgos.site_id)).all())
     if len(site_ids) == 0:
         raise EmptyTableError(f"'{SchemaNames.SITES}.{SiteAlgos.__tablename__}' is empty.")
 
@@ -140,10 +140,9 @@ def fetch_bidding_zone_and_price_metadata_id_as_mapper(session: Session) -> dict
 
 
 def fetch_bidding_zones_in_price_metadata(session: Session) -> list[str]:
-    bidding_zone_in_pm = [
-        price_metadata.bidding_zone for price_metadata in session.scalars(select(PriceMetadata)).all()
-    ]
-    if len(bidding_zone_in_pm) == 0:
+    bidding_zones_in_price_metadata = list(session.scalars(select(PriceMetadata.bidding_zone)).all())
+
+    if len(bidding_zones_in_price_metadata) == 0:
         raise EmptyTableError(f"'{SchemaNames.ENERGY_PRICES}.{PriceMetadata.__tablename__}' is empty.")
 
-    return bidding_zone_in_pm
+    return bidding_zones_in_price_metadata
