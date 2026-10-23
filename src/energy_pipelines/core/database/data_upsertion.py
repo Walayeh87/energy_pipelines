@@ -57,6 +57,7 @@ def upsert_energy_prices(session: Session, prices: DataFrame, update_on_conflict
         session.execute(stmt)
         session.commit()
     except Exception as e:
+        session.rollback()
         raise Exception("An error occurred while trying to upsert energy prices.") from e
 
 
