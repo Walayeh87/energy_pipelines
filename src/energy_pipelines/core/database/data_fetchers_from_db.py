@@ -1,3 +1,4 @@
+import logging
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
@@ -15,6 +16,8 @@ from energy_pipelines.core.database.table_models import (
     SiteAlgos,
 )
 from energy_pipelines.utils.custom_errors import EmptyTableError
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -72,55 +75,72 @@ def fetch_energy_price_data(
 
 
 def fetch_price_metadata(session: Session, metadata_id: int) -> PriceMetadata:
-    all_price_metadata_ids = session.scalars(select(PriceMetadata.id)).all()
-    if metadata_id not in all_price_metadata_ids:
+    price_metadata = session.scalars(
+        select(PriceMetadata).where(PriceMetadata.id == metadata_id)
+    ).one_or_none()
+
+    if price_metadata is None:
         raise ValueError(
             f"price_metadata_id: '{metadata_id}' not found in"
             f" '{SchemaNames.ENERGY_PRICES}.{PriceMetadata.__tablename__}'."
         )
 
-    return session.scalars(select(PriceMetadata).where(PriceMetadata.id == metadata_id)).one()
+    return price_metadata
 
 
 def fetch_site(session: Session, site_name: str) -> Site:
-    if site_name not in session.scalars(select(Site.name)).all():
+    site = session.scalars(select(Site).where(Site.name == site_name)).one_or_none()
+
+    if site is None:
         raise ValueError(
             f"Site with name '{site_name}' not found in '{SchemaNames.SITES}.{Site.__tablename__}'."
         )
 
-    return session.scalars(select(Site).where(Site.name == site_name)).one()
+    return site
 
 
 def fetch_site_algos(session: Session, site_id: int) -> list[SiteAlgos]:
-    if site_id not in fetch_all_site_ids_in_site_algos(session=session):
+    site_algos = list(session.scalars(select(SiteAlgos).where(SiteAlgos.site_id == site_id)).all())
+
+    if len(site_algos) == 0:
         raise ValueError(f"site_id: {site_id} not found in '{SchemaNames.SITES}.{SiteAlgos.__tablename__}'.")
 
-    return list(session.scalars(select(SiteAlgos).where(SiteAlgos.site_id == site_id)).all())
+    return site_algos
 
 
 def fetch_algo_name(session: Session, algo_id: int) -> str:
-    if algo_id not in [algo.id for algo in session.scalars(select(Algo)).all()]:
+    algo_name = session.scalars(select(Algo.name).where(Algo.id == algo_id)).one_or_none()
+
+    if algo_name is None:
         raise ValueError(f"algo_id: {algo_id} not found in '{SchemaNames.ALGOS}.{Algo.__tablename__}'.")
 
-    return session.scalars(select(Algo.name).where(Algo.id == algo_id)).one()
+    return algo_name
 
 
 def fetch_price_metadata_id_by_bidding_zone(session: Session, bidding_zone: str) -> int:
-    if bidding_zone not in fetch_bidding_zones_in_price_metadata(session=session):
+    price_metadata = session.scalars(
+        select(PriceMetadata.id).where(PriceMetadata.bidding_zone == bidding_zone)
+    ).one_or_none()
+
+    if price_metadata is None:
         raise ValueError(
             f"bidding_zone '{bidding_zone}' not found in"
             f" '{SchemaNames.ENERGY_PRICES}.{PriceMetadata.__tablename__}'."
         )
 
-    return session.scalars(select(PriceMetadata.id).where(PriceMetadata.bidding_zone == bidding_zone)).one()
+    return price_metadata
 
 
 def fetch_site_names_by_ids(session: Session, site_ids: list[int] | int) -> list[str]:
     if isinstance(site_ids, int):
         site_ids = [site_ids]
 
-    sites = session.scalars(select(Site).where(Site.id.in_(site_ids))).all()
-    return [site.name for site in sites]
+    site_names = list(session.scalars(select(Site.name).where(Site.id.in_(site_ids))).all())
+
+    if len(site_names) == 0:
+        raise ValueError(f"No sites found for the provided site_ids: {site_ids}")
+
+    return site_names
 
 
 def fetch_all_site_ids_in_site_algos(session: Session) -> list[int]:
