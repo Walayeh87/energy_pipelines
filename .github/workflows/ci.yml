@@ -50,5 +50,5 @@ jobs:
       - name: Ruff
         run: |
           ruff check --select I .
+          ruff check --fix .
           ruff format --check .
-          ruff check .
