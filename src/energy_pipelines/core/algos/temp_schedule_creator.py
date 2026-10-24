@@ -7,7 +7,7 @@ from energy_pipelines.utils.time_helpers import get_tomorrows_date
 
 def create_temp_schedule(
     prices: DataFrame,
-    min_temp: float,
+    min_temp: float | int,
     max_temp: float,
     default_temp: float,
 ) -> DataFrame:
