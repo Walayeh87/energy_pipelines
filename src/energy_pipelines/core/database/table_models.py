@@ -1,6 +1,5 @@
 from datetime import datetime
 from enum import StrEnum
-from typing import ClassVar
 from uuid import UUID, uuid4
 
 from sqlalchemy import BOOLEAN, BigInteger, DateTime, ForeignKey, Numeric, SmallInteger, String, Text
@@ -21,7 +20,7 @@ class SchemaNames(StrEnum):
 
 class Regions(Base):
     __tablename__ = "regions"
-    __table_args__: ClassVar = {"schema": SchemaNames.ENERGY_PRICES}
+    __table_args__ = {"schema": SchemaNames.ENERGY_PRICES}
 
     bidding_zone: Mapped[str] = mapped_column(String(10), primary_key=True, unique=True)
     name: Mapped[str] = mapped_column(String(50), nullable=False)
@@ -36,7 +35,7 @@ class Regions(Base):
 
 class PriceMetadata(Base):
     __tablename__ = "price_metadata"
-    __table_args__: ClassVar = {"schema": SchemaNames.ENERGY_PRICES}
+    __table_args__ = {"schema": SchemaNames.ENERGY_PRICES}
 
     id: Mapped[int] = mapped_column(
         BigInteger,
@@ -69,7 +68,7 @@ class PriceMetadata(Base):
 
 class PriceData(Base):
     __tablename__ = "price_data"
-    __table_args__: ClassVar = {"schema": SchemaNames.ENERGY_PRICES}
+    __table_args__ = {"schema": SchemaNames.ENERGY_PRICES}
 
     timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), primary_key=True)
     price_metadata_id: Mapped[int] = mapped_column(
@@ -91,7 +90,7 @@ class PriceData(Base):
 
 class PriceFetchingFailures(Base):
     __tablename__ = "price_fetching_failures"
-    __table_args__: ClassVar = {"schema": SchemaNames.ENERGY_PRICES}
+    __table_args__ = {"schema": SchemaNames.ENERGY_PRICES}
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
     price_metadata_id: Mapped[int] = mapped_column(
@@ -116,7 +115,7 @@ class PriceFetchingFailures(Base):
 
 class Site(Base):
     __tablename__ = "site"
-    __table_args__: ClassVar = {"schema": SchemaNames.SITES}
+    __table_args__ = {"schema": SchemaNames.SITES}
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
     name: Mapped[str] = mapped_column(String(50), nullable=False, unique=True)
@@ -144,7 +143,7 @@ class Site(Base):
 
 class Algo(Base):
     __tablename__ = "algo"
-    __table_args__: ClassVar = {"schema": SchemaNames.ALGOS}
+    __table_args__ = {"schema": SchemaNames.ALGOS}
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
     name: Mapped[str] = mapped_column(String(50), nullable=False, unique=True)
@@ -161,7 +160,7 @@ class Algo(Base):
 
 class AlgosOutput(Base):
     __tablename__ = "algos_output"
-    __table_args__: ClassVar = {"schema": SchemaNames.ALGOS}
+    __table_args__ = {"schema": SchemaNames.ALGOS}
 
     site_id: Mapped[int] = mapped_column(
         BigInteger,
@@ -188,7 +187,7 @@ class AlgosOutput(Base):
 
 class SiteAlgos(Base):
     __tablename__ = "site_algos"
-    __table_args__: ClassVar = {"schema": SchemaNames.SITES}
+    __table_args__ = {"schema": SchemaNames.SITES}
 
     site_id: Mapped[int] = mapped_column(
         BigInteger,
@@ -217,7 +216,7 @@ class SiteAlgos(Base):
 
 class FailingAlgosOutput(Base):
     __tablename__ = "failing_algos_output"
-    __table_args__: ClassVar = {"schema": SchemaNames.ALGOS}
+    __table_args__ = {"schema": SchemaNames.ALGOS}
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
     failure_id: Mapped[UUID] = mapped_column(
