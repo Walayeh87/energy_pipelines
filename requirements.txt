@@ -3,7 +3,7 @@ pandas==2.3.3
 pytest==9.0.2
 ruff==0.17.2
 sqlalchemy==2.1.6
-uliweb-alembic==0.6.9
+alembic==1.20.1
 requests==2.34.2
 psycopg==3.3.4
 pydantic==2.13.5
