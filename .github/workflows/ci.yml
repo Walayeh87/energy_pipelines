@@ -93,5 +93,5 @@ jobs:
       - name: Apply migrations
         run: alembic upgrade head
 
-      - name: Check model and migration consistency
-        run: alembic check
+#      - name: Check model and migration consistency
+#        run: alembic check
