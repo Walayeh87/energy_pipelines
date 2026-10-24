@@ -2,9 +2,9 @@ import logging
 from typing import Any
 
 from pandas import DataFrame
-from psycopg import OperationalError
 from sqlalchemy import FromClause, exists, select, tuple_
 from sqlalchemy.dialects.postgresql import Insert, insert
+from sqlalchemy.exc import OperationalError, SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from energy_pipelines.core.database.table_models import (
@@ -34,8 +34,9 @@ def upsert_energy_prices(session: Session, prices: DataFrame, update_on_conflict
             ),
         )
 
-    except OperationalError as e:
-        raise OperationalError(f"An error occurred while checking price existence: {e}") from e
+    except OperationalError:
+        session.rollback()
+        raise
 
     if records_exist:
         logger.info("Some/all energy prices already exist in the database.")
@@ -58,9 +59,12 @@ def upsert_energy_prices(session: Session, prices: DataFrame, update_on_conflict
     try:
         session.execute(stmt)
         session.commit()
-    except Exception as e:
+    except OperationalError:
         session.rollback()
-        raise Exception("An error occurred while trying to upsert energy prices.") from e
+        raise
+    except SQLAlchemyError as e:
+        session.rollback()
+        raise RuntimeError("An error occurred while trying to upsert energy prices.") from e
 
 
 def upsert_price_fetching_failures(
@@ -72,9 +76,12 @@ def upsert_price_fetching_failures(
     try:
         session.execute(stmt)
         session.commit()
-    except Exception as e:
+    except OperationalError:
         session.rollback()
-        raise Exception("An error occurred while trying to upsert price fetching failures.") from e
+        raise
+    except SQLAlchemyError as e:
+        session.rollback()
+        raise RuntimeError("An error occurred while trying to upsert price fetching failures.") from e
 
     logger.info("Price fetching failures have been upserted successfully.")
 
@@ -100,8 +107,9 @@ def upsert_valid_temp_schedule(
                 )
             ),
         )
-    except OperationalError as e:
-        raise OperationalError(f"An error occurred while checking temperature schedule existence: {e}") from e
+    except OperationalError:
+        session.rollback()
+        raise
 
     if records_exist:
         logger.info("Some/all temperature schedule values already exist in the database.")
@@ -123,9 +131,12 @@ def upsert_valid_temp_schedule(
     try:
         session.execute(stmt)
         session.commit()
-    except Exception as e:
+    except OperationalError:
         session.rollback()
-        raise Exception("An error occurred while trying to upsert temperature schedule.") from e
+        raise
+    except SQLAlchemyError as e:
+        session.rollback()
+        raise RuntimeError("An error occurred while trying to upsert temperature schedule.") from e
 
 
 def upsert_failing_temp_schedule(
@@ -137,9 +148,12 @@ def upsert_failing_temp_schedule(
     try:
         session.execute(stmt)
         session.commit()
-    except Exception as e:
+    except OperationalError:
         session.rollback()
-        raise Exception("An error occurred while trying to upsert failing temperature schedule.") from e
+        raise
+    except SQLAlchemyError as e:
+        session.rollback()
+        raise RuntimeError("An error occurred while trying to upsert failing temperature schedule.") from e
 
     logger.info("Failing temperature schedule values have been upserted successfully.")
 

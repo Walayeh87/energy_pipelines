@@ -73,15 +73,11 @@ def run_temp_schedule_pipeline(
         logger.info(f"Start temperature schedule upsertion process for site '{site_name}'.")
         try:
             _run_site_pipeline(session=session, site_name=site_name, update_on_conflict=update_on_conflict)
-        except (ValueError, EmptyTableError, ZoneInfoNotFoundError) as e:
-            logger.exception(
-                f"{type(e).__name__} occurred while creating a schedule for site '{site_name}': {e}"
-            )
+        except (ValueError, EmptyTableError, ZoneInfoNotFoundError, RuntimeError):
+            logger.exception(f"Expected error occurred while creating a schedule for site '{site_name}'")
 
-        except Exception as e:
-            logger.exception(
-                f"Unexpected error occurred while creating a schedule for site '{site_name}': {e}"
-            )
+        except Exception:
+            logger.exception(f"Unexpected error occurred while creating a schedule for site '{site_name}'")
 
     logger.info("Temperature schedule process has been completed.")
 

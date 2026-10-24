@@ -7,7 +7,7 @@ class TimeConstant(int, Enum):
     SEC_IN_DAY = 3600 * 24
     SEC_IN_WEEK = 3600 * 24 * 7
 
-    MIN_IN_H = 60
+    MIN_IN_H = 60 * 1
     MIN_IN_DAY = 60 * 24
 
     H_IN_DAY = 24

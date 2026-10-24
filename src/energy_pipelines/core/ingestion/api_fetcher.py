@@ -6,6 +6,7 @@ from typing import Any
 import requests
 from requests import ReadTimeout, RequestException
 
+from energy_pipelines.utils.custom_errors import APIFetchingError
 from energy_pipelines.utils.time_constant import TimeConstant
 
 logger = logging.getLogger(__name__)
@@ -93,4 +94,6 @@ def fetch_data_from_api(
         except ValueError as e:
             raise ValueError("Invalid json.") from e
 
-    raise Exception(f"Unexpected error in {fetch_data_from_api.__name__}, most likely due to network issues.")
+    raise APIFetchingError(
+        f"Unexpected error in {fetch_data_from_api.__name__}, most likely due to network issues."
+    )

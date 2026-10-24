@@ -2,7 +2,7 @@ import logging
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
-from psycopg import OperationalError
+from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Session
 
 from energy_pipelines.core.database.data_fetchers_from_db import (
@@ -32,11 +32,11 @@ def run_energy_price_pipeline(session: Session, update_on_conflict: bool) -> Non
                 update_on_conflict=update_on_conflict,
             )
 
-        except (ValueError, OperationalError) as e:
-            logger.exception(f"{type(e).__name__} occurred while upserting energy prices: {e}")
+        except (ValueError, OperationalError, RuntimeError):
+            logger.exception("Expected error occurred while upserting energy prices")
 
-        except Exception as e:
-            logger.exception(f"Unexpected error occurred while upserting energy prices: {e}")
+        except Exception:
+            logger.exception("Unexpected error occurred while upserting energy prices")
 
     logger.info("Daily upserting process completed.")
 
