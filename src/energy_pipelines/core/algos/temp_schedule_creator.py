@@ -1,10 +1,8 @@
 import numpy as np
 import pandas as pd
-
-from energy_pipelines.utils.time_helpers import get_tomorrows_date
-
 from pandas import DataFrame, Timedelta
 
+from energy_pipelines.utils.time_helpers import get_tomorrows_date
 
 
 def create_temp_schedule(
@@ -12,6 +10,8 @@ def create_temp_schedule(
     min_temp: int | float,
     max_temp: int | float,
     default_temp: int | float,
+
+
 ) -> DataFrame:
     # No need to check empty prices since this case is handled in temp_schedule_pipeline.py
     if min_temp > max_temp:
