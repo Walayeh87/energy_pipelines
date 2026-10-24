@@ -7,9 +7,9 @@ from energy_pipelines.utils.time_helpers import get_tomorrows_date
 
 def create_temp_schedule(
     prices: DataFrame,
-    min_temp: int | float,
-    max_temp: int | float,
-    default_temp: int | float,
+    min_temp: float,
+    max_temp: float,
+    default_temp: float,
 ) -> DataFrame:
     # No need to check empty prices since this case is handled in temp_schedule_pipeline.py
     if min_temp > max_temp:
@@ -33,7 +33,7 @@ def create_temp_schedule(
 
 def create_backup_temp_schedule(
     algo_freq: str,
-    default_temp: float | int,
+    default_temp: float,
     tz: str,
 ) -> DataFrame:
     index = pd.date_range(

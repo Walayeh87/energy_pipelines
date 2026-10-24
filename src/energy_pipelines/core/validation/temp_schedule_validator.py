@@ -25,7 +25,7 @@ def get_temp_schedule_error(result: TempScheduleValidationResult) -> str:
 
 def validate_backup_temp_schedule(
     temp_schedule: DataFrame,
-    default_temp: int | float,
+    default_temp: float,
     expected_length: int,
 ) -> TempScheduleValidationResult:
     if len(temp_schedule) != expected_length:
@@ -48,8 +48,8 @@ def validate_backup_temp_schedule(
 
 def validate_temp_schedule(
     temp_schedule: DataFrame,
-    min_temp: int | float,
-    max_temp: int | float,
+    min_temp: float,
+    max_temp: float,
     expected_length: int,
 ) -> TempScheduleValidationResult:
     if len(temp_schedule) != expected_length:
