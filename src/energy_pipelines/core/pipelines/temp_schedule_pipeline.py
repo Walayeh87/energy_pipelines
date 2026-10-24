@@ -5,6 +5,7 @@ from uuid import uuid4
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from pandas import Timedelta
+from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Session
 
 from energy_pipelines.core.algos.temp_schedule_creator import (
@@ -82,8 +83,12 @@ def _run_temp_schedule_pipeline(
     site_ids: list[int] | int | ALL_SITE_IDS,
     update_on_conflict: bool,
 ) -> None:
-    site_ids = _process_site_ids(session=session, site_ids=site_ids)
-    site_names = fetch_site_names_by_ids(session=session, site_ids=site_ids)
+    try:
+        site_ids = _process_site_ids(session=session, site_ids=site_ids)
+        site_names = fetch_site_names_by_ids(session=session, site_ids=site_ids)
+    except ValueError as e:
+        logger.error(f"{type(e).__name__} occurred while fetching site ids or names: {e}")
+        return
 
     if len(site_names) == 0:
         logger.warning(
