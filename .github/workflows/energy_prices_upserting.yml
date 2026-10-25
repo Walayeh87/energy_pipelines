@@ -1,9 +1,15 @@
 name: Energy Prices Upsertion
 
+
 on:
+  pull_request:
+  push:
+    branches:
+      - main
+
   schedule:
     # "min h day month year", "*" means every occurrence. The time is in UTC.
-    - cron: "17 08 * * *"
+    - cron: "30 08 * * *"
 
   # Allows manual triggering from GitHub.
   workflow_dispatch:
@@ -34,7 +40,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Run Daily Energy Price Pipeline
+      - name: Run Energy Price Pipeline
         run: |
           PYTHONPATH=$PYTHONPATH:$(pwd)
           python src/energy_pipelines/core/pipelines/energy_prices_pipeline.py
