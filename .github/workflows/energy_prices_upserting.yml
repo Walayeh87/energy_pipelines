@@ -4,7 +4,7 @@ name: Energy Prices Upsertion
 on:
   schedule:
     # "min h day month year", "*" means every occurrence. The time is in UTC.
-    - cron: "35 08 * * *"
+    - cron: "36 08 * * *"
 
   # Allows manual triggering from GitHub.
   workflow_dispatch:
