@@ -33,7 +33,7 @@ def run_energy_price_pipeline(session: Session, update_on_conflict: bool) -> Non
             )
 
         except (ValueError, OperationalError, RuntimeError):
-            logger.exception("Expected error occurred while upserting energy prices")
+            logger.exception("Error occurred while upserting energy prices")
 
         except Exception:
             logger.exception("Unexpected error occurred while upserting energy prices")
