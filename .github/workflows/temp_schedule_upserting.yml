@@ -1,11 +1,6 @@
 name: Temperature Schedule Upsertion
 
 on:
-  pull_request:
-  push:
-    branches:
-      - main
-
   schedule:
     # "min h day month year", "*" means every occurrence. The time is in UTC.
     - cron: "17 20 * * *"
