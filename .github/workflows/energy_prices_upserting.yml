@@ -36,4 +36,5 @@ jobs:
 
       - name: Run Energy Price Pipeline
         run: |
+          PYTHONPATH=$PYTHONPATH:$(pwd)
           python src/energy_pipelines/core/pipelines/energy_prices_pipeline.py
