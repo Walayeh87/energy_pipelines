@@ -2,8 +2,8 @@ name: Energy Prices Upsertion
 
 on:
   schedule:
-    # Run daily at 08:36 UTC.
-    - cron: "45 8 * * *"
+    # "min h day month year", "*" means every occurrence. The time is in UTC.
+    - cron: "47 15 * * *"
 
   # Allow manual triggering from GitHub.
   workflow_dispatch:
