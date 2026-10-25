@@ -1,4 +1,4 @@
-name: Alembic
+name: DB Migration
 
 on:
   pull_request:

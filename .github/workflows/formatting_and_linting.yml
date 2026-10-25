@@ -1,4 +1,4 @@
-name: Ruff
+name: Formatting and Linting
 
 on:
   pull_request:
@@ -7,7 +7,7 @@ on:
       - main
 
 jobs:
-  formatting_and_linting:
+  ruff:
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
