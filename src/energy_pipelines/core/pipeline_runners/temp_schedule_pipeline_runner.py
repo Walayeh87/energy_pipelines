@@ -74,7 +74,7 @@ def run_temp_schedule_pipeline(
         try:
             _run_site_pipeline(session=session, site_name=site_name, update_on_conflict=update_on_conflict)
         except (ValueError, EmptyTableError, ZoneInfoNotFoundError, RuntimeError):
-            logger.exception(f"Expected error occurred while creating a schedule for site '{site_name}'")
+            logger.exception(f"Error occurred while creating a schedule for site '{site_name}'")
 
         except Exception:
             logger.exception(f"Unexpected error occurred while creating a schedule for site '{site_name}'")

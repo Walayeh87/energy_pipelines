@@ -34,31 +34,27 @@ def upsert_energy_prices(session: Session, prices: DataFrame, update_on_conflict
             ),
         )
 
-    except OperationalError:
-        session.rollback()
-        raise
+        if records_exist:
+            logger.info("Some/all energy prices already exist in the database.")
 
-    if records_exist:
-        logger.info("Some/all energy prices already exist in the database.")
+        cols2exclude_as_mapper = {
+            column.name: stmt.excluded[column.name]
+            for column in PriceData.__table__.columns
+            if not column.primary_key
+        }
 
-    cols2exclude_as_mapper = {
-        column.name: stmt.excluded[column.name]
-        for column in PriceData.__table__.columns
-        if not column.primary_key
-    }
+        stmt = _handle_upsertion_policy(
+            stmt=stmt,
+            records2insert=prices,
+            records_exist=records_exist,
+            primary_keys=[PriceData.timestamp.key, PriceData.price_metadata_id.key],
+            cols2exclude_as_mapper=cols2exclude_as_mapper,
+            update_on_conflict=update_on_conflict,
+        )
 
-    stmt = _handle_upsertion_policy(
-        stmt=stmt,
-        records2insert=prices,
-        records_exist=records_exist,
-        primary_keys=[PriceData.timestamp.key, PriceData.price_metadata_id.key],
-        cols2exclude_as_mapper=cols2exclude_as_mapper,
-        update_on_conflict=update_on_conflict,
-    )
-
-    try:
         session.execute(stmt)
         session.commit()
+
     except OperationalError:
         session.rollback()
         raise
@@ -107,28 +103,24 @@ def upsert_valid_temp_schedule(
                 )
             ),
         )
-    except OperationalError:
-        session.rollback()
-        raise
 
-    if records_exist:
-        logger.info("Some/all temperature schedule values already exist in the database.")
+        if records_exist:
+            logger.info("Some/all temperature schedule values already exist in the database.")
 
-    cols2exclude_as_mapper = {
-        column.name: stmt.excluded[column.name]
-        for column in AlgosOutput.__table__.columns
-        if not column.primary_key
-    }
-    stmt = _handle_upsertion_policy(
-        stmt=stmt,
-        records2insert=temp_schedule,
-        records_exist=records_exist,
-        primary_keys=[AlgosOutput.timestamp.key, AlgosOutput.site_id.key, AlgosOutput.algo_id.key],
-        cols2exclude_as_mapper=cols2exclude_as_mapper,
-        update_on_conflict=update_on_conflict,
-    )
+        cols2exclude_as_mapper = {
+            column.name: stmt.excluded[column.name]
+            for column in AlgosOutput.__table__.columns
+            if not column.primary_key
+        }
+        stmt = _handle_upsertion_policy(
+            stmt=stmt,
+            records2insert=temp_schedule,
+            records_exist=records_exist,
+            primary_keys=[AlgosOutput.timestamp.key, AlgosOutput.site_id.key, AlgosOutput.algo_id.key],
+            cols2exclude_as_mapper=cols2exclude_as_mapper,
+            update_on_conflict=update_on_conflict,
+        )
 
-    try:
         session.execute(stmt)
         session.commit()
     except OperationalError:
