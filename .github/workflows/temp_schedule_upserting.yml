@@ -1,4 +1,4 @@
-name: Energy Prices Upsertion
+name: Temperature Schedule Upsertion
 
 on:
   schedule:
