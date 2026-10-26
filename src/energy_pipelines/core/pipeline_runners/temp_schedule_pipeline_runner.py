@@ -4,6 +4,7 @@ from uuid import uuid4
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from pandas import Timedelta
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from energy_pipelines.core.algos.temp_schedule_creator import (
@@ -73,7 +74,7 @@ def run_temp_schedule_pipeline(
         logger.info(f"Start temperature schedule upsertion process for site '{site_name}'.")
         try:
             _run_site_pipeline(session=session, site_name=site_name, update_on_conflict=update_on_conflict)
-        except (ValueError, EmptyTableError, ZoneInfoNotFoundError, RuntimeError):
+        except (ValueError, EmptyTableError, ZoneInfoNotFoundError, RuntimeError, SQLAlchemyError):
             logger.exception(f"Error occurred while creating a schedule for site '{site_name}'")
 
         except Exception:
