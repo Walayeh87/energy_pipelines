@@ -58,7 +58,7 @@ def upsert_price_fetching_failures(
         session.rollback()
         raise
 
-    logger.info("Price fetching failures have been upserted successfully.")
+    logger.debug("Price fetching failures have been upserted successfully.")
 
 
 def upsert_valid_temp_schedule(
@@ -106,4 +106,4 @@ def upsert_failing_temp_schedule(
         session.rollback()
         raise
 
-    logger.info("Failing temperature schedule values have been upserted successfully.")
+    logger.debug("Failing temperature schedule values have been upserted successfully.")
