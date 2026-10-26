@@ -2,7 +2,6 @@ import logging
 
 from pandas import DataFrame
 from sqlalchemy.dialects.postgresql import insert
-from sqlalchemy.exc import OperationalError, SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from energy_pipelines.core.database.table_models import (
@@ -29,21 +28,20 @@ def upsert_energy_prices(session: Session, prices: DataFrame, update_on_conflict
                 index_elements=[PriceData.timestamp.key, PriceData.price_metadata_id.key],
                 set_=cols2exclude_as_mapper,
             )
+            logger.info("Energy prices have been upserted with updates.")
 
         else:
             stmt = stmt.on_conflict_do_nothing(
                 index_elements=[PriceData.timestamp.key, PriceData.price_metadata_id.key]
             )
+            logger.info("Energy prices have been upserted without updates.")
 
         session.execute(stmt)
         session.commit()
 
-    except OperationalError:
+    except Exception:
         session.rollback()
         raise
-    except SQLAlchemyError as e:
-        session.rollback()
-        raise RuntimeError("An error occurred while trying to upsert energy prices.") from e
 
 
 def upsert_price_fetching_failures(
@@ -55,12 +53,10 @@ def upsert_price_fetching_failures(
 
         session.execute(stmt)
         session.commit()
-    except OperationalError:
+
+    except Exception:
         session.rollback()
         raise
-    except SQLAlchemyError as e:
-        session.rollback()
-        raise RuntimeError("An error occurred while trying to upsert price fetching failures.") from e
 
     logger.info("Price fetching failures have been upserted successfully.")
 
@@ -90,12 +86,10 @@ def upsert_valid_temp_schedule(
 
         session.execute(stmt)
         session.commit()
-    except OperationalError:
+
+    except Exception:
         session.rollback()
         raise
-    except SQLAlchemyError as e:
-        session.rollback()
-        raise RuntimeError("An error occurred while trying to upsert temperature schedule.") from e
 
 
 def upsert_failing_temp_schedule(
@@ -107,11 +101,9 @@ def upsert_failing_temp_schedule(
 
         session.execute(stmt)
         session.commit()
-    except OperationalError:
+
+    except Exception:
         session.rollback()
         raise
-    except SQLAlchemyError as e:
-        session.rollback()
-        raise RuntimeError("An error occurred while trying to upsert failing temperature schedule.") from e
 
     logger.info("Failing temperature schedule values have been upserted successfully.")
