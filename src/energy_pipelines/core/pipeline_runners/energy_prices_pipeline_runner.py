@@ -20,6 +20,22 @@ logger = logging.getLogger(__name__)
 
 
 def run_energy_price_pipeline(session: Session, update_on_conflict: bool) -> None:
+    """Run the daily energy price ingestion pipeline for all stored bidding zones.
+
+    This function fetches the mapping of bidding zones to their corresponding price metadata IDs,
+    then processes each bidding zone in turn. For every zone, it attempts to retrieve tomorrow's
+    energy prices, preprocesses and upserts the results, or logs and stores a fetching failure if
+    the HTTP request does not succeed.
+
+    Args:
+        session: Active SQLAlchemy database session used for reading configuration and upserting
+            records such as energy prices and price fetching failures.
+        update_on_conflict: Whether upsert operations should overwrite existing rows when a
+            conflict is encountered.
+
+    Returns:
+        None
+    """
     mapper = fetch_bidding_zone_and_price_metadata_id_as_mapper(session=session)
 
     for bidding_zone, price_metadata_id in mapper.items():

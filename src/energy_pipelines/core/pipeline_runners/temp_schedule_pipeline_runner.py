@@ -57,6 +57,32 @@ def run_temp_schedule_pipeline(
     site_ids: list[int] | int | ALL_SITE_IDS,
     update_on_conflict: bool,
 ) -> None:
+    """Run the temperature schedule generation pipeline for one or more sites.
+
+    The pipeline resolves the requested site IDs, fetches corresponding site names,
+    then iterates over each site and creates a temperature schedule based on
+    the configured algorithm parameters and energy price data.
+
+    If energy prices are not available, a backup schedule will be generated.
+
+    Any per-site errors are logged without aborting the entire execution.
+
+    Args:
+        session: Active SQLAlchemy database session used for reading configuration and
+            upserting generated schedules.
+        site_ids: Target site identifiers. Accepts:
+            - a single integer site ID,
+            - a list of site IDs,
+            - or the literal "all_site_ids" to process every site available in the
+              database.
+        update_on_conflict: Whether upsert operations should overwrite existing records
+            when conflicts are encountered.
+
+    Note: If an algorithm is deactivated, no temperature schedule will be created.
+
+    Returns:
+        None
+    """
     try:
         site_ids = _process_site_ids(session=session, site_ids=site_ids)
         site_names = fetch_site_names_by_ids(session=session, site_ids=site_ids)
