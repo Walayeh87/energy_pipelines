@@ -1,8 +1,8 @@
+from datetime import datetime
+
 import numpy as np
 import pandas as pd
 from pandas import DataFrame, Timedelta
-
-from energy_pipelines.utils.time_helpers import get_tomorrows_date
 
 
 def create_temp_schedule(
@@ -32,14 +32,11 @@ def create_temp_schedule(
 
 
 def create_backup_temp_schedule(
+    start: datetime,
+    end: datetime,
     algo_freq: str,
     default_temp: float,
     tz: str,
 ) -> DataFrame:
-    index = pd.date_range(
-        start=get_tomorrows_date(tz=tz),
-        end=get_tomorrows_date(tz=tz) + Timedelta(days=1) - Timedelta(algo_freq),
-        freq=algo_freq,
-        tz=tz,
-    )
+    index = pd.date_range(start=start, end=end - Timedelta(algo_freq), freq=algo_freq, tz=tz)
     return DataFrame([default_temp] * len(index), index=index)

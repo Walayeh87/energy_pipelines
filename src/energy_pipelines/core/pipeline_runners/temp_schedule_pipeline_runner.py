@@ -194,6 +194,8 @@ def _run_site_pipeline(session: Session, site_name: str, update_on_conflict: boo
             if energy_prices_not_available or have_unknown_issues:
                 _handle_backup_case_for_temp_schedule_creator(
                     session=session,
+                    start=start,
+                    end=end,
                     site=site,
                     algo_name=algo_name,
                     site_algo=site_algo,
@@ -271,6 +273,8 @@ def _handle_normal_case_for_temp_schedule_creator(
 
 def _handle_backup_case_for_temp_schedule_creator(
     session: Session,
+    start: datetime,
+    end: datetime,
     site: Site,
     algo_name: str,
     site_algo: SiteAlgos,
@@ -280,6 +284,8 @@ def _handle_backup_case_for_temp_schedule_creator(
     update_on_conflict: bool,
 ) -> None:
     backup_temp_schedule = create_backup_temp_schedule(
+        start=start,
+        end=end,
         algo_freq=algo_params.freq,
         default_temp=algo_params.temps["default_temp"],
         tz="UTC",
