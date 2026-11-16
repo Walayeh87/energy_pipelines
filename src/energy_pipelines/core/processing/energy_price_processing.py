@@ -13,7 +13,7 @@ from tspropy import (
 )
 
 from energy_pipelines.core.database.data_fetchers_from_db import (
-    DTFetchingResult,
+    EnergyPriceFetchingResult,
 )
 from energy_pipelines.core.database.table_models import PriceData, PriceMetadata, SchemaNames
 
@@ -39,7 +39,7 @@ class EnergyPriceProcessingResult:
 
 
 def process_energy_price_data(
-    fetching_result: DTFetchingResult,
+    fetching_result: EnergyPriceFetchingResult,
     price_tz: str,
     price_freq: str,
 ) -> EnergyPriceProcessingResult:

@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 
 
 @dataclass
-class DTFetchingResult:
+class EnergyPriceFetchingResult:
     price_metadata_id: int
     start: datetime
     end: datetime
@@ -34,7 +34,7 @@ def fetch_energy_price_data(
     price_metadata_id: int,
     start: datetime,
     end: datetime,
-) -> DTFetchingResult:
+) -> EnergyPriceFetchingResult:
     if len(cols2fetch) == 0:
         raise ValueError("No columns specified for fetching.")
 
@@ -71,7 +71,9 @@ def fetch_energy_price_data(
         .filter(PriceData.timestamp < end)
         .all()
     )
-    return DTFetchingResult(energy_price_data=data, price_metadata_id=price_metadata_id, start=start, end=end)
+    return EnergyPriceFetchingResult(
+        energy_price_data=data, price_metadata_id=price_metadata_id, start=start, end=end
+    )
 
 
 def fetch_price_metadata(session: Session, metadata_id: int) -> PriceMetadata:
